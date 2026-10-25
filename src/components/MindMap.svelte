@@ -1,4 +1,5 @@
 <script lang="ts">
+  import NodeMenu from './NodeMenu.svelte';
   import { layoutTree, linkPath } from '../lib/layout';
   import {
     addChild,
@@ -13,19 +14,26 @@
 
   const MIN_SCALE = 0.25;
   const MAX_SCALE = 3;
+  const MENU_HIDE_DELAY = 200;
 
   let layout = $derived(layoutTree(root));
   let selectedId = $state<string | null>(null);
   let editingId = $state<string | null>(null);
+  let hoveredId = $state<string | null>(null);
+  let pressedId = $state<string | null>(null);
   let view = $state({ x: 0, y: 0, scale: 1 });
   let width = $state(0);
   let height = $state(0);
   let panStart: { x: number; y: number } | null = null;
+  let hideMenuTimer: ReturnType<typeof setTimeout> | undefined;
 
   let originX = $derived(width / 2 + view.x);
   let originY = $derived(height / 2 + view.y);
-  let isBranchSelected = $derived(
-    selectedId !== null && selectedId !== root.id,
+  // Mouse users get the menu on hover; touch and pen users on press.
+  let menuNode = $derived(
+    editingId
+      ? undefined
+      : layout.nodes.find((p) => p.node.id === (hoveredId ?? pressedId)),
   );
 
   function startEditing(id: string) {
@@ -39,31 +47,56 @@
     editingId = null;
   }
 
-  function addNode(kind: 'child' | 'sibling') {
-    if (!selectedId) return;
+  function addNode(id: string, kind: 'child' | 'sibling') {
     const node =
-      kind === 'sibling' && selectedId !== root.id
-        ? addSibling(root, selectedId)
-        : addChild(root, selectedId);
+      kind === 'sibling' && id !== root.id
+        ? addSibling(root, id)
+        : addChild(root, id);
     if (node) startEditing(node.id);
   }
 
-  function removeSelected() {
-    if (!selectedId) return;
-    const parent = findParent(root, selectedId);
-    if (removeNode(root, selectedId)) selectedId = parent?.id ?? null;
+  function remove(id: string) {
+    const parent = findParent(root, id);
+    if (removeNode(root, id)) selectedId = parent?.id ?? null;
+  }
+
+  function press(id: string, event: PointerEvent) {
+    selectedId = id;
+    pressedId = event.pointerType === 'mouse' ? null : id;
+  }
+
+  function hover(id: string, event: PointerEvent) {
+    if (event.pointerType !== 'mouse') return;
+    clearTimeout(hideMenuTimer);
+    hoveredId = id;
+  }
+
+  function hideMenuSoon() {
+    clearTimeout(hideMenuTimer);
+    // The grace period lets the pointer cross the gap from node to menu.
+    hideMenuTimer = setTimeout(() => (hoveredId = null), MENU_HIDE_DELAY);
+  }
+
+  function fromMenu(action: (id: string) => void) {
+    return () => {
+      const id = menuNode!.node.id;
+      hoveredId = null;
+      pressedId = null;
+      action(id);
+    };
   }
 
   function handleKey(event: KeyboardEvent) {
     // Keys typed into inputs or on buttons belong to them, not the map.
     if ((event.target as Element).closest('input, button')) return;
     if (!selectedId || editingId) return;
+    const id = selectedId;
     const actions: Record<string, () => void> = {
-      Tab: () => addNode('child'),
-      Enter: () => addNode('sibling'),
-      Delete: removeSelected,
-      Backspace: removeSelected,
-      F2: () => startEditing(selectedId!),
+      Tab: () => addNode(id, 'child'),
+      Enter: () => addNode(id, 'sibling'),
+      Delete: () => remove(id),
+      Backspace: () => remove(id),
+      F2: () => startEditing(id),
       Escape: () => (selectedId = null),
     };
     const action = actions[event.key];
@@ -86,6 +119,7 @@
   function startPan(event: PointerEvent) {
     if (event.target !== event.currentTarget) return;
     selectedId = null;
+    pressedId = null;
     panStart = { x: event.clientX - view.x, y: event.clientY - view.y };
     (event.currentTarget as Element).setPointerCapture(event.pointerId);
   }
@@ -159,7 +193,9 @@
           transform="translate({placed.x} {placed.y})"
           role="button"
           tabindex="-1"
-          onpointerdown={() => (selectedId = placed.node.id)}
+          onpointerdown={(event) => press(placed.node.id, event)}
+          onpointerenter={(event) => hover(placed.node.id, event)}
+          onpointerleave={hideMenuSoon}
           ondblclick={() => startEditing(placed.node.id)}
         >
           <rect
@@ -193,21 +229,27 @@
     </g>
   </svg>
 
-  <div class="toolbar">
-    <button disabled={!selectedId} onclick={() => addNode('child')}>
-      + Child
-    </button>
-    <button disabled={!isBranchSelected} onclick={() => addNode('sibling')}>
-      + Sibling
-    </button>
-    <button disabled={!isBranchSelected} onclick={removeSelected}>
-      Delete
-    </button>
-  </div>
+  {#if menuNode}
+    <NodeMenu
+      x={originX + menuNode.x * view.scale}
+      y={originY + (menuNode.y - menuNode.height / 2) * view.scale}
+      isRoot={menuNode.depth === 0}
+      onaddchild={fromMenu((id) => addNode(id, 'child'))}
+      onaddsibling={fromMenu((id) => addNode(id, 'sibling'))}
+      onrename={fromMenu(startEditing)}
+      ondelete={fromMenu(remove)}
+      onpointerenter={() => clearTimeout(hideMenuTimer)}
+      onpointerleave={hideMenuSoon}
+    />
+  {/if}
 
   <p class="hint">
-    Double-click to rename · Tab child · Enter sibling · Del remove · Drag to
-    pan · Scroll to zoom · Double-click background to recenter
+    <span class="mouse-hint">
+      Hover a node for actions · Tab child · Enter sibling · Del remove · Scroll
+      to zoom
+    </span>
+    <span class="touch-hint">Tap a node for actions</span>
+    · Drag to pan · Double-click background to recenter
   </p>
 </main>
 
@@ -225,6 +267,8 @@
     height: 100%;
     cursor: grab;
     user-select: none;
+    /* Lets touch drags pan the map instead of scrolling the page. */
+    touch-action: none;
   }
 
   svg:active {
@@ -287,14 +331,6 @@
     outline: none;
   }
 
-  .toolbar {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    display: flex;
-    gap: 8px;
-  }
-
   .hint {
     position: absolute;
     bottom: 12px;
@@ -305,5 +341,19 @@
     font-size: 12px;
     color: #a8a29e;
     pointer-events: none;
+  }
+
+  .touch-hint {
+    display: none;
+  }
+
+  @media (hover: none) {
+    .mouse-hint {
+      display: none;
+    }
+
+    .touch-hint {
+      display: inline;
+    }
   }
 </style>
