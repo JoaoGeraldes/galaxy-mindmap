@@ -32,3 +32,13 @@ button:disabled {
   opacity: 0.4;
   cursor: default;
 }
+
+.primary {
+  background: #1f2937;
+  border-color: #1f2937;
+  color: white;
+}
+
+.primary:hover {
+  background: #374151;
+}

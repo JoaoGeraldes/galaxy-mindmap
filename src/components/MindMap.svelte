@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import NodeMenu from './NodeMenu.svelte';
   import { layoutTree, linkPath } from '../lib/layout';
   import {
@@ -10,7 +11,18 @@
     type MindNode,
   } from '../lib/tree';
 
-  let { root = $bindable() }: { root: MindNode } = $props();
+  interface Props {
+    root: MindNode;
+    /** Called after every edit, so the map can be saved right away. */
+    onchange: () => void;
+    editRootOnStart?: boolean;
+  }
+
+  let {
+    root = $bindable(),
+    onchange,
+    editRootOnStart = false,
+  }: Props = $props();
 
   const MIN_SCALE = 0.25;
   const MAX_SCALE = 3;
@@ -36,6 +48,10 @@
       : layout.nodes.find((p) => p.node.id === (hoveredId ?? pressedId)),
   );
 
+  onMount(() => {
+    if (editRootOnStart) startEditing(root.id);
+  });
+
   function startEditing(id: string) {
     selectedId = id;
     editingId = id;
@@ -43,8 +59,11 @@
 
   function finishEditing(text: string) {
     const node = editingId ? findNode(root, editingId) : undefined;
-    if (node && text.trim()) node.text = text.trim();
+    const newText = text.trim();
     editingId = null;
+    if (!node || !newText || newText === node.text) return;
+    node.text = newText;
+    onchange();
   }
 
   function addNode(id: string, kind: 'child' | 'sibling') {
@@ -52,12 +71,16 @@
       kind === 'sibling' && id !== root.id
         ? addSibling(root, id)
         : addChild(root, id);
-    if (node) startEditing(node.id);
+    if (!node) return;
+    onchange();
+    startEditing(node.id);
   }
 
   function remove(id: string) {
     const parent = findParent(root, id);
-    if (removeNode(root, id)) selectedId = parent?.id ?? null;
+    if (!removeNode(root, id)) return;
+    selectedId = parent?.id ?? null;
+    onchange();
   }
 
   function press(id: string, event: PointerEvent) {
