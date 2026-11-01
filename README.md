@@ -1,6 +1,21 @@
 # Galaxy Mind Map
 
-Mind maps saved as JSON files. The desktop app (Electron) saves them in a
+![Galaxy Mind Map showing a glowing mind map, with a list of maps in the sidebar](site/images/screenshot.png)
+
+Galaxy Mind Map helps you get ideas out of your head and see how they
+connect. Start with one big idea, then branch out. Ideas are bubbles joined
+by stretchy strings. Drag one onto another to move it. Undo anything. Each
+map is its own simple file, yours to keep. Use the desktop app or open it in
+your browser, nothing to install. With its built-in MCP server, Claude and
+other AI apps can create maps for you, from code, documents or a quick
+prompt.
+
+**[Website](https://joaogeraldes.github.io/galaxy-mindmap/) · [Open in your
+browser](https://joaogeraldes.github.io/galaxy-mindmap/app/)**
+
+## Development
+
+Maps are saved as JSON files. The desktop app (Electron) saves them in a
 folder you choose; the web version keeps them in the browser, and import and
 export move them to and from disk.
 
