@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import type { DesktopFiles } from './lib/desktop-folder';
 
 declare global {

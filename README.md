@@ -12,3 +12,13 @@ npm start         # build and run the desktop app
 npm run build     # build the web version into dist/
 npm run check     # types, formatting and tests
 ```
+
+## Changing the logo
+
+The favicon and in-app logo use `src/assets/logo.svg` directly. The desktop
+window icon can't be an SVG, so after changing the logo, re-export it as a
+512×512 PNG:
+
+```sh
+npx sharp-cli -i src/assets/logo.svg -o electron/icon.png resize 512 512
+```

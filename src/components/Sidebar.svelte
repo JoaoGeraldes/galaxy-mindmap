@@ -1,4 +1,5 @@
 <script lang="ts">
+  import logo from '../assets/logo.svg';
   import { byTitle, type Project } from '../lib/projects';
 
   interface Props {
@@ -59,6 +60,7 @@
 
 <aside class:collapsed>
   {#if collapsed}
+    <img class="logo" src={logo} alt="Mind Map" />
     <button
       class="icon"
       onclick={() => (collapsed = false)}
@@ -82,7 +84,7 @@
   {:else}
     <header>
       <div class="title-row">
-        <h1>Mind Map</h1>
+        <h1><img class="logo" src={logo} alt="" />Mind Map</h1>
         <button
           class="icon"
           onclick={() => (collapsed = true)}
@@ -226,8 +228,17 @@
   }
 
   h1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 0;
     font-size: 18px;
+  }
+
+  .logo {
+    width: 28px;
+    height: 28px;
+    filter: drop-shadow(0 0 6px rgb(166 23 255 / 0.6));
   }
 
   .folder {

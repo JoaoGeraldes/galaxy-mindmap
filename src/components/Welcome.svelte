@@ -1,4 +1,6 @@
 <script lang="ts">
+  import logo from '../assets/logo.svg';
+
   let {
     problem,
     onchoose,
@@ -11,6 +13,7 @@
 
 <div class="welcome">
   <div class="card">
+    <img class="logo" src={logo} alt="" />
     <h1>Mind Map</h1>
     {#if onchoose}
       <p>
@@ -51,6 +54,14 @@
     box-shadow:
       0 0 0 1px var(--border),
       0 0 48px rgb(124 58 237 / 0.25);
+  }
+
+  .logo {
+    display: block;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 12px rgb(166 23 255 / 0.6));
   }
 
   h1 {

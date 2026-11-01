@@ -93,6 +93,9 @@ async function createWindow() {
     width: 1280,
     height: 800,
     title: 'Mind Map',
+    // Electron can't use SVG icons; icon.png is a 512px copy of src/assets/logo.svg.
+    icon: path.join(import.meta.dirname, 'icon.png'),
+    backgroundColor: '#07071a',
     webPreferences: { preload: path.join(import.meta.dirname, 'preload.cjs') },
   });
 
