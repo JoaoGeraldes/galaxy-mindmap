@@ -7,7 +7,6 @@
   import {
     BEAMS,
     CLOUD,
-    DROP,
     GLOW,
     HEARTBEAT,
     HISTORY,
@@ -83,9 +82,7 @@
   );
   let menuPlace = $derived(menuNode && placeOf(menuNode));
   // The node the dragged one would connect to if dropped now.
-  let target = $derived(
-    held ? dropTarget(layout, placeOf, held, DROP.reach) : undefined,
-  );
+  let target = $derived(held ? dropTarget(layout, placeOf, held) : undefined);
   let ghost = $derived.by(() => {
     if (!held || !target) return;
     const dragged = layout.nodes.find((p) => p.node.id === held!.id)!;

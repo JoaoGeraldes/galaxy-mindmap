@@ -3,39 +3,40 @@ import { findNode } from './tree';
 
 /**
  * The node a dragged node would connect to if dropped where it is now:
- * the nearest one within `reach`, skipping its current parent and its own
- * branch. `placeOf` says where each node currently is on screen.
+ * one its box touches, skipping its current parent and its own branch.
+ * When several touch, the one it overlaps most wins. `placeOf` says where
+ * each node currently is on screen.
  */
 export function dropTarget(
   layout: Layout,
   placeOf: (placed: PlacedNode) => Point,
   held: Point & { id: string },
-  reach: number,
 ): PlacedNode | undefined {
   const dragged = layout.nodes.find((p) => p.node.id === held.id);
   const parent = layout.links.find((l) => l.to === dragged)?.from;
   if (!dragged || !parent) return;
 
-  let nearest: PlacedNode | undefined;
-  let nearestGap = reach;
+  let best: PlacedNode | undefined;
+  let bestOverlap = -1;
   for (const placed of layout.nodes) {
     if (placed === parent || findNode(dragged.node, placed.node.id)) continue;
-    const gap = gapToBox(held, placeOf(placed), placed);
-    if (gap < nearestGap) {
-      nearest = placed;
-      nearestGap = gap;
+    const overlap = overlapArea(
+      { ...dragged, ...held },
+      { ...placed, ...placeOf(placed) },
+    );
+    if (overlap > bestOverlap) {
+      best = placed;
+      bestOverlap = overlap;
     }
   }
-  return nearest;
+  return best;
 }
 
-/** How far a point is from a node's box; 0 when inside it. */
-function gapToBox(
-  point: Point,
-  centre: Point,
-  { width, height }: { width: number; height: number },
-): number {
-  const dx = Math.max(0, Math.abs(point.x - centre.x) - width / 2);
-  const dy = Math.max(0, Math.abs(point.y - centre.y) - height / 2);
-  return Math.hypot(dx, dy);
+type Box = Point & { width: number; height: number };
+
+/** How much two boxes overlap; 0 when they just touch, -1 when apart. */
+function overlapArea(a: Box, b: Box): number {
+  const across = (a.width + b.width) / 2 - Math.abs(a.x - b.x);
+  const down = (a.height + b.height) / 2 - Math.abs(a.y - b.y);
+  return across < 0 || down < 0 ? -1 : across * down;
 }
