@@ -26,14 +26,14 @@
       rows: [
         ['Move around', ['Drag the background']],
         ['Zoom', ['Scroll']],
-        ['Recenter', ['Double-click the background']],
+        ['Fit map to screen', ['Double-click the background']],
       ],
     },
   ] as const;
 </script>
 
 <details class="shortcuts">
-  <summary title="Shortcuts" aria-label="Shortcuts">
+  <summary class="round" title="Shortcuts" aria-label="Shortcuts">
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M3 7h18v10H3zM7 11h.01M11 11h.01M15 11h.01M8 14h8" />
     </svg>
@@ -58,24 +58,12 @@
 
 <style>
   .shortcuts {
-    position: absolute;
-    right: 16px;
-    bottom: calc(40px + env(safe-area-inset-bottom));
+    position: relative;
     color: #e2e8f0;
     font-size: 13px;
   }
 
   summary {
-    display: grid;
-    place-items: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: rgb(20 18 48 / 0.85);
-    box-shadow:
-      0 0 0 1px rgb(167 139 250 / 0.35),
-      0 0 18px rgb(124 58 237 / 0.35);
-    cursor: pointer;
     list-style: none;
   }
 
@@ -83,19 +71,8 @@
     display: none;
   }
 
-  summary:hover,
   [open] summary {
     background: rgb(76 29 149 / 0.9);
-  }
-
-  svg {
-    width: 22px;
-    height: 22px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
   }
 
   /* Opens upward from the button, so it never covers it. */
@@ -148,6 +125,16 @@
     font-family: inherit;
     font-size: 12px;
     color: white;
+  }
+
+  /* On phones the button sits at the top, so the panel opens downward. */
+  @media (max-width: 700px) {
+    .panel {
+      top: 60px;
+      bottom: auto;
+      left: 0;
+      right: auto;
+    }
   }
 
   .or {

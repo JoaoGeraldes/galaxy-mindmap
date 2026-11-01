@@ -23,6 +23,7 @@
     type Point,
   } from '../lib/layout';
   import { advance, restingWorld, type Held } from '../lib/physics';
+  import { between, fitView, type View } from '../lib/view';
   import {
     addChild,
     findNode,
@@ -36,18 +37,23 @@
     root: MindNode;
     /** Called after every edit, so the map can be saved right away. */
     onchange: () => void;
+    onexport: () => void;
     editRootOnStart?: boolean;
   }
 
   let {
     root = $bindable(),
     onchange,
+    onexport,
     editRootOnStart = false,
   }: Props = $props();
 
   const MIN_SCALE = 0.25;
   const MAX_SCALE = 3;
   const MENU_HIDE_DELAY = 200;
+  // Room around the map when fitting it, so it clears the floating buttons.
+  const FIT_MARGIN = 80;
+  const FIT_SECONDS = 0.35;
 
   let layout = $derived(layoutTree(root));
   let selectedId = $state<string | null>(null);
@@ -305,8 +311,29 @@
     view.y = event.clientY - panStart.y;
   }
 
-  function resetView(event: MouseEvent) {
-    if (event.target === event.currentTarget) view = { x: 0, y: 0, scale: 1 };
+  /** Zooms and pans so the whole map fits, gliding there unless calm. */
+  function fitMap() {
+    const area = areaAround(
+      layout.nodes.map((placed) => ({ ...placed, ...placeOf(placed) })),
+      FIT_MARGIN,
+    );
+    const target = fitView(area, { width, height }, MIN_SCALE, 1);
+    if (calm) {
+      view = target;
+      return;
+    }
+    const from: View = { ...view };
+    const start = performance.now();
+    requestAnimationFrame(function glide(now) {
+      const progress = Math.min(1, (now - start) / 1000 / FIT_SECONDS);
+      const eased = 1 - (1 - progress) ** 3;
+      view = between(from, target, eased);
+      if (progress < 1) requestAnimationFrame(glide);
+    });
+  }
+
+  function fitOnBackground(event: MouseEvent) {
+    if (event.target === event.currentTarget) fitMap();
   }
 
   function zoom(event: WheelEvent) {
@@ -350,7 +377,7 @@
     onpointerdown={startPan}
     onpointermove={pan}
     onpointerup={() => (panStart = null)}
-    ondblclick={resetView}
+    ondblclick={fitOnBackground}
     style:--beam-length={BEAMS.lengthPercent}
     style:--trip="{BEAMS.secondsPerTrip}s"
     style:--beat="{HEARTBEAT.seconds}s"
@@ -512,7 +539,33 @@
     onredo={() => travel(redo)}
   />
 
-  <Shortcuts />
+  <div class="tools">
+    <button
+      class="round"
+      onclick={fitMap}
+      title="Fit map to screen"
+      aria-label="Fit map to screen"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true"
+        ><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" /><circle
+          cx="12"
+          cy="12"
+          r="2"
+        /></svg
+      >
+    </button>
+    <button
+      class="round"
+      onclick={onexport}
+      title="Export this map"
+      aria-label="Export this map"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true"
+        ><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg
+      >
+    </button>
+    <Shortcuts />
+  </div>
 </main>
 
 <style>
@@ -715,6 +768,25 @@
 
     .node.selected > .heartbeat {
       display: none;
+    }
+  }
+
+  .tools {
+    position: absolute;
+    right: 16px;
+    bottom: calc(40px + env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* On phones the bottom belongs to undo and redo, within thumb reach. */
+  @media (max-width: 700px) {
+    .tools {
+      top: 12px;
+      left: 12px;
+      right: auto;
+      bottom: auto;
     }
   }
 

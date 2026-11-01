@@ -241,6 +241,7 @@
           <MindMap
             bind:root={projects[activeIndex].root}
             onchange={() => save(projects[activeIndex])}
+            onexport={exportActive}
             editRootOnStart={activeId === newMapId}
           />
         {/key}

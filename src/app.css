@@ -58,6 +58,37 @@ button:disabled:hover {
   background: var(--surface-raised);
 }
 
+/* Round floating buttons over the map, such as fit-to-screen and export. */
+.round {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgb(20 18 48 / 0.85);
+  box-shadow:
+    0 0 0 1px var(--border-strong),
+    0 0 18px rgb(124 58 237 / 0.35);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.round:hover {
+  background: rgb(76 29 149 / 0.9);
+}
+
+.round svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .primary {
   background: var(--accent-fill);
   border-color: var(--accent-fill);
