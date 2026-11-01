@@ -1,4 +1,6 @@
 <script lang="ts">
+  import FloatingPanel from './FloatingPanel.svelte';
+
   // Macs use the Command key where other systems use Ctrl.
   const mod = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl';
 
@@ -32,14 +34,15 @@
   ] as const;
 </script>
 
-<details class="shortcuts" name="map-panel">
-  <summary class="round" title="Shortcuts" aria-label="Shortcuts">
+<FloatingPanel label="Shortcuts">
+  {#snippet icon()}
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M3 7h18v10H3zM7 11h.01M11 11h.01M15 11h.01M8 14h8" />
     </svg>
-  </summary>
-  <div class="panel">
-    {#each groups as group (group.title)}
+  {/snippet}
+
+  {#each groups as group (group.title)}
+    <section>
       <h3>{group.title}</h3>
       <dl>
         {#each group.rows as [action, keys] (action)}
@@ -52,58 +55,16 @@
           </dd>
         {/each}
       </dl>
-    {/each}
-  </div>
-</details>
+    </section>
+  {/each}
+</FloatingPanel>
 
 <style>
-  .shortcuts {
-    position: relative;
-    color: var(--text);
-    font-size: 13px;
-  }
-
-  summary {
-    list-style: none;
-  }
-
-  summary::-webkit-details-marker {
-    display: none;
-  }
-
-  [open] summary {
-    background: var(--floating-hover);
-  }
-
-  /* Opens upward from the button, so it never covers it. */
-  .panel {
-    position: absolute;
-    right: 0;
-    bottom: 60px;
-    width: min(300px, calc(100vw - 32px));
-    max-height: 60vh;
-    overflow-y: auto;
-    padding: 4px 16px 12px;
-    border-radius: 14px;
-    background: var(--panel);
-    box-shadow:
-      0 0 0 1px var(--border-strong),
-      0 8px 32px rgb(0 0 0 / 0.25);
-  }
-
-  h3 {
-    margin: 12px 0 6px;
-    color: var(--accent);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
   dl {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 6px 12px;
+    align-items: center;
+    gap: 10px 16px;
     margin: 0;
   }
 
@@ -118,23 +79,14 @@
 
   kbd {
     display: inline-block;
-    padding: 1px 6px;
+    margin: 2px 0;
+    padding: 2px 7px;
     border-radius: 5px;
     background: var(--key);
     box-shadow: inset 0 -1px 0 var(--border-strong);
     font-family: inherit;
     font-size: 12px;
     color: var(--text);
-  }
-
-  /* On phones the button sits at the top, so the panel opens downward. */
-  @media (max-width: 700px) {
-    .panel {
-      top: 60px;
-      bottom: auto;
-      left: 0;
-      right: auto;
-    }
   }
 
   .or {
