@@ -14,7 +14,7 @@
 <div class="welcome">
   <div class="card">
     <img class="logo" src={logo} alt="" />
-    <h1>Mind Map</h1>
+    <h1>Galaxy Mind Map</h1>
     {#if onchoose}
       <p>
         Choose a folder to keep your mind maps in. Each map is saved there as

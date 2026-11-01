@@ -60,7 +60,7 @@
 
 <aside class:collapsed>
   {#if collapsed}
-    <img class="logo" src={logo} alt="Mind Map" />
+    <img class="logo" src={logo} alt="Galaxy Mind Map" />
     <button
       class="icon"
       onclick={() => (collapsed = false)}
@@ -84,7 +84,7 @@
   {:else}
     <header>
       <div class="title-row">
-        <h1><img class="logo" src={logo} alt="" />Mind Map</h1>
+        <h1><img class="logo" src={logo} alt="" />Galaxy Mind Map</h1>
         <button
           class="icon"
           onclick={() => (collapsed = true)}

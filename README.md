@@ -1,4 +1,4 @@
-# Mind Map
+# Galaxy Mind Map
 
 Mind maps saved as JSON files. The desktop app (Electron) saves them in a
 folder you choose; the web version keeps them in the browser, and import and

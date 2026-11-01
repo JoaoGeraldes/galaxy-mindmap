@@ -1,5 +1,7 @@
 import { mount } from 'svelte';
 import App from './App.svelte';
+// Bundled with the app rather than loaded online, so it works offline too.
+import '@fontsource-variable/archivo';
 import './app.css';
 import { browserFolder } from './lib/browser-folder';
 import { desktopFolder } from './lib/desktop-folder';

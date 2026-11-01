@@ -207,7 +207,11 @@
 </script>
 
 <svelte:head>
-  <title>{active ? `${active.root.text} — Mind Map` : 'Mind Map'}</title>
+  <title
+    >{active
+      ? `${active.root.text} — Galaxy Mind Map`
+      : 'Galaxy Mind Map'}</title
+  >
 </svelte:head>
 
 {#if folder === null}
