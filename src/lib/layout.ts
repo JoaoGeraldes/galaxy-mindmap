@@ -1,19 +1,6 @@
+import { BRANCH_COLORS, NODE_LOOKS, ROOT_COLOR } from './config';
 import type { MindNode } from './tree';
 
-export const ROOT_COLOR = '#1f2937';
-export const BRANCH_COLORS = [
-  '#e8590c',
-  '#1c7ed6',
-  '#2f9e44',
-  '#ae3ec9',
-  '#f08c00',
-  '#0c8599',
-  '#e64980',
-  '#5c7cfa',
-];
-
-const ROOT_HEIGHT = 56;
-const NODE_HEIGHT = 38;
 const VERTICAL_GAP = 12;
 const HORIZONTAL_GAP = 56;
 
@@ -30,6 +17,16 @@ export interface PlacedNode {
   color: string;
 }
 
+export interface Point {
+  x: number;
+  y: number;
+}
+
+/** Anything with a centre and a width, such as a node in motion. */
+export interface Box extends Point {
+  width: number;
+}
+
 export interface Link {
   from: PlacedNode;
   to: PlacedNode;
@@ -40,19 +37,26 @@ export interface Layout {
   links: Link[];
 }
 
+export function nodeLook(depth: number) {
+  return NODE_LOOKS[Math.min(depth, NODE_LOOKS.length - 1)];
+}
+
 export function nodeWidth(text: string, depth: number): number {
-  const fontSize = depth === 0 ? 20 : 15;
+  const { fontSize, paddingX } = nodeLook(depth);
   // Estimated instead of measured so the layout stays a pure, testable function.
-  return Math.max(64, Math.round(text.length * fontSize * 0.58) + 36);
+  return Math.max(48, Math.round(text.length * fontSize * 0.58) + 2 * paddingX);
 }
 
-function subtreeHeight(node: MindNode): number {
-  return Math.max(NODE_HEIGHT, stackHeight(node.children));
+function subtreeHeight(node: MindNode, depth: number): number {
+  return Math.max(
+    nodeLook(depth).height,
+    stackHeight(node.children, depth + 1),
+  );
 }
 
-function stackHeight(nodes: MindNode[]): number {
+function stackHeight(nodes: MindNode[], depth: number): number {
   const gaps = VERTICAL_GAP * Math.max(0, nodes.length - 1);
-  return nodes.reduce((sum, node) => sum + subtreeHeight(node), gaps);
+  return nodes.reduce((sum, node) => sum + subtreeHeight(node, depth), gaps);
 }
 
 /** Places the root at (0, 0) with main branches split between both sides. */
@@ -63,7 +67,7 @@ export function layoutTree(root: MindNode): Layout {
     x: 0,
     y: 0,
     width: nodeWidth(root.text, 0),
-    height: ROOT_HEIGHT,
+    height: nodeLook(0).height,
     depth: 0,
     side: 0,
     color: ROOT_COLOR,
@@ -87,17 +91,17 @@ function placeStack(
   side: Side,
   colorFor: (index: number) => string,
 ) {
-  let top = parent.y - stackHeight(children) / 2;
+  const depth = parent.depth + 1;
+  let top = parent.y - stackHeight(children, depth) / 2;
   children.forEach((child, index) => {
-    const height = subtreeHeight(child);
-    const depth = parent.depth + 1;
+    const height = subtreeHeight(child, depth);
     const width = nodeWidth(child.text, depth);
     const placed: PlacedNode = {
       node: child,
       x: parent.x + side * (parent.width / 2 + HORIZONTAL_GAP + width / 2),
       y: top + height / 2,
       width,
-      height: NODE_HEIGHT,
+      height: nodeLook(depth).height,
       depth,
       side,
       color: colorFor(index),
@@ -109,10 +113,21 @@ function placeStack(
   });
 }
 
-/** A smooth curve from the parent's outer edge to the child's inner edge. */
-export function linkPath({ from, to }: Link): string {
-  const startX = from.x + (to.side * from.width) / 2;
-  const endX = to.x - (to.side * to.width) / 2;
-  const middleX = (startX + endX) / 2;
-  return `M ${startX} ${from.y} C ${middleX} ${from.y}, ${middleX} ${to.y}, ${endX} ${to.y}`;
+/**
+ * A smooth curve from the parent's outer edge to the child's inner edge.
+ * `bend` pushes the curve's middle sideways, so a string can wobble.
+ */
+export function linkPath(
+  from: Box,
+  to: Box,
+  side: Side,
+  bend: Point = { x: 0, y: 0 },
+): string {
+  const startX = from.x + (side * from.width) / 2;
+  const endX = to.x - (side * to.width) / 2;
+  // A cubic curve's middle moves ¾ as far as its control points.
+  const bendX = (bend.x * 4) / 3;
+  const bendY = (bend.y * 4) / 3;
+  const middleX = (startX + endX) / 2 + bendX;
+  return `M ${startX} ${from.y} C ${middleX} ${from.y + bendY}, ${middleX} ${to.y + bendY}, ${endX} ${to.y}`;
 }

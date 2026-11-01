@@ -1,7 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import NodeMenu from './NodeMenu.svelte';
-  import { layoutTree, linkPath } from '../lib/layout';
+  import { cloudPath } from '../lib/cloud';
+  import { BEAMS, CLOUD, GLOW, PHYSICS } from '../lib/config';
+  import {
+    layoutTree,
+    linkPath,
+    nodeLook,
+    type PlacedNode,
+    type Point,
+  } from '../lib/layout';
+  import { advance, restingWorld, type Held } from '../lib/physics';
   import {
     addChild,
     addSibling,
@@ -38,6 +47,16 @@
   let height = $state(0);
   let panStart: { x: number; y: number } | null = null;
   let hideMenuTimer: ReturnType<typeof setTimeout> | undefined;
+  let svg: SVGSVGElement;
+
+  // Moves smaller than this count as a click rather than a drag.
+  const DRAG_THRESHOLD = 4;
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let world = $state.raw(restingWorld(layoutTree(root)));
+  let held = $state<Held | null>(null);
+  let grab: { id: string; from: Point } | null = null;
+  let seconds = $state(0);
+  let settled = false;
 
   let originX = $derived(width / 2 + view.x);
   let originY = $derived(height / 2 + view.y);
@@ -47,10 +66,66 @@
       ? undefined
       : layout.nodes.find((p) => p.node.id === (hoveredId ?? pressedId)),
   );
+  let menuPlace = $derived(menuNode && placeOf(menuNode));
+  let strings = $derived(
+    layout.links.map(({ from, to }) => {
+      const start = { ...placeOf(from), width: from.width };
+      const end = { ...placeOf(to), width: to.width };
+      const middle = world.strings.get(to.node.id) ?? start;
+      const bend = {
+        x: middle.x - (start.x + end.x) / 2,
+        y: middle.y - (start.y + end.y) / 2,
+      };
+      return {
+        id: to.node.id,
+        d: linkPath(start, end, to.side, bend),
+        color: to.color,
+        isMain: to.depth === 1,
+      };
+    }),
+  );
+
+  // Any edit or drag wakes the springs up again.
+  $effect(() => {
+    void layout;
+    void held;
+    settled = false;
+  });
 
   onMount(() => {
     if (editRootOnStart) startEditing(root.id);
+    let last = performance.now();
+    let frame = requestAnimationFrame(function tick(now) {
+      const elapsed = (now - last) / 1000;
+      last = now;
+      if (calm) {
+        if (!settled) world = restingWorld(layout, held);
+        settled = true;
+      } else {
+        seconds = now / 1000;
+        if (!settled) {
+          const next = advance(world, layout, PHYSICS, elapsed, held);
+          world = next.world;
+          settled = next.settled;
+        }
+      }
+      frame = requestAnimationFrame(tick);
+    });
+    return () => cancelAnimationFrame(frame);
   });
+
+  // A node the springs haven't picked up yet is drawn at its resting place.
+  function placeOf(placed: PlacedNode): Point {
+    return world.nodes.get(placed.node.id) ?? placed;
+  }
+
+  function toMap(event: PointerEvent): Point {
+    const bounds = svg.getBoundingClientRect();
+    return {
+      x: (event.clientX - bounds.left - originX) / view.scale,
+      y: (event.clientY - bounds.top - originY) / view.scale,
+    };
+  }
 
   function startEditing(id: string) {
     selectedId = id;
@@ -86,6 +161,23 @@
   function press(id: string, event: PointerEvent) {
     selectedId = id;
     pressedId = event.pointerType === 'mouse' ? null : id;
+    grab = { id, from: toMap(event) };
+    (event.currentTarget as Element).setPointerCapture(event.pointerId);
+  }
+
+  function drag(event: PointerEvent) {
+    if (!grab) return;
+    const point = toMap(event);
+    const distance = Math.hypot(point.x - grab.from.x, point.y - grab.from.y);
+    if (!held && distance * view.scale < DRAG_THRESHOLD) return;
+    hoveredId = null;
+    pressedId = null;
+    held = { id: grab.id, ...point };
+  }
+
+  function release() {
+    grab = null;
+    held = null;
   }
 
   function hover(id: string, event: PointerEvent) {
@@ -190,44 +282,106 @@
   style:background-size="{24 * view.scale}px {24 * view.scale}px"
   style:background-position="{originX}px {originY}px"
 >
+  <div class="aura"></div>
   <svg
     role="application"
+    bind:this={svg}
     use:zoomOnWheel
     onpointerdown={startPan}
     onpointermove={pan}
     onpointerup={() => (panStart = null)}
     ondblclick={resetView}
+    style:--beam-length={BEAMS.lengthPercent}
+    style:--trip="{BEAMS.secondsPerTrip}s"
   >
+    <defs>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation={GLOW.blur} result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
+
     <g transform="translate({originX} {originY}) scale({view.scale})">
-      {#each layout.links as link (link.to.node.id)}
-        <path
-          class="link"
-          d={linkPath(link)}
-          stroke={link.to.color}
-          stroke-width={link.to.depth === 1 ? 3 : 2}
-        />
-      {/each}
+      <g filter={GLOW.blur ? 'url(#glow)' : undefined}>
+        {#each strings as { id, d, color, isMain } (id)}
+          <path
+            class="link"
+            {d}
+            stroke={color}
+            stroke-width={isMain ? 2.5 : 1.5}
+          />
+        {/each}
+      </g>
+
+      {#if !calm}
+        <!-- Outside the glow filter, which would otherwise redraw every frame. -->
+        <g>
+          {#each strings as { id, d, color }, index (id)}
+            {@const delay = `-${(index * 0.77) % BEAMS.secondsPerTrip}s`}
+            <path
+              class="beam halo"
+              {d}
+              pathLength="100"
+              stroke={color}
+              style:animation-delay={delay}
+            />
+            <path
+              class="beam"
+              {d}
+              pathLength="100"
+              stroke={color}
+              style:animation-delay={delay}
+            />
+          {/each}
+        </g>
+      {/if}
 
       {#each layout.nodes as placed (placed.node.id)}
+        {@const look = nodeLook(placed.depth)}
+        {@const place = placeOf(placed)}
         <g
           class="node depth-{Math.min(placed.depth, 2)}"
           class:selected={placed.node.id === selectedId}
+          class:held={placed.node.id === held?.id}
           style:--color={placed.color}
-          transform="translate({placed.x} {placed.y})"
+          style:font-size="{look.fontSize}px"
+          transform="translate({place.x} {place.y})"
           role="button"
           tabindex="-1"
           onpointerdown={(event) => press(placed.node.id, event)}
+          onpointermove={drag}
+          onpointerup={release}
+          onpointercancel={release}
           onpointerenter={(event) => hover(placed.node.id, event)}
           onpointerleave={hideMenuSoon}
           ondblclick={() => startEditing(placed.node.id)}
         >
-          <rect
-            x={-placed.width / 2}
-            y={-placed.height / 2}
-            width={placed.width}
-            height={placed.height}
-            rx={placed.height / 2}
-          />
+          {#if placed.depth === 0}
+            <path
+              class="cloud"
+              filter={GLOW.blur ? 'url(#glow)' : undefined}
+              d={cloudPath(
+                placed.width + 2 * CLOUD.padding,
+                placed.height + 2 * CLOUD.padding,
+                seconds,
+                CLOUD,
+              )}
+            />
+          {:else}
+            <rect
+              filter={placed.depth === 1 && GLOW.blur
+                ? 'url(#glow)'
+                : undefined}
+              x={-placed.width / 2}
+              y={-placed.height / 2}
+              width={placed.width}
+              height={placed.height}
+              rx={placed.depth === 1 ? 12 : placed.height / 2}
+            />
+          {/if}
           {#if placed.node.id === editingId}
             <foreignObject
               x={-placed.width / 2}
@@ -252,10 +406,10 @@
     </g>
   </svg>
 
-  {#if menuNode}
+  {#if menuNode && menuPlace}
     <NodeMenu
-      x={originX + menuNode.x * view.scale}
-      y={originY + (menuNode.y - menuNode.height / 2) * view.scale}
+      x={originX + menuPlace.x * view.scale}
+      y={originY + (menuPlace.y - menuNode.height / 2) * view.scale}
       isRoot={menuNode.depth === 0}
       onaddchild={fromMenu((id) => addNode(id, 'child'))}
       onaddsibling={fromMenu((id) => addNode(id, 'sibling'))}
@@ -272,7 +426,8 @@
       to zoom
     </span>
     <span class="touch-hint">Tap a node for actions</span>
-    · Drag to pan · Double-click background to recenter
+    · Drag a node to stretch it · Drag the background to pan · Double-click background
+    to recenter
   </p>
 </main>
 
@@ -281,10 +436,29 @@
     position: relative;
     flex: 1;
     overflow: hidden;
-    background-image: radial-gradient(#d6d3d1 1px, transparent 1px);
+    background-color: #07071a;
+    background-image: radial-gradient(
+      rgb(255 255 255 / 0.07) 1px,
+      transparent 1px
+    );
+  }
+
+  /* A soft light behind the centre, then darkening edges, like a lens. */
+  .aura {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        circle at center,
+        rgb(124 58 237 / 0.18),
+        transparent 45%
+      ),
+      radial-gradient(circle at center, transparent 55%, rgb(0 0 0 / 0.55));
   }
 
   svg {
+    position: relative;
     display: block;
     width: 100%;
     height: 100%;
@@ -298,9 +472,39 @@
     cursor: grabbing;
   }
 
-  .link {
+  .link,
+  .beam {
     fill: none;
     pointer-events: none;
+  }
+
+  .link {
+    opacity: 0.75;
+  }
+
+  .beam {
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: var(--beam-length) 100;
+    animation: travel var(--trip) linear infinite;
+  }
+
+  .beam:not(.halo) {
+    stroke: white;
+  }
+
+  .halo {
+    stroke-width: 7;
+    opacity: 0.35;
+  }
+
+  @keyframes travel {
+    from {
+      stroke-dashoffset: var(--beam-length);
+    }
+    to {
+      stroke-dashoffset: -100;
+    }
   }
 
   .node {
@@ -308,37 +512,45 @@
     outline: none;
   }
 
+  .node.held {
+    cursor: grabbing;
+  }
+
   .node rect {
-    fill: white;
+    fill: rgb(12 12 32 / 0.85);
     stroke: var(--color);
-    stroke-width: 2;
-    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.12));
+    stroke-width: 1;
   }
 
   .node text {
-    font-size: 15px;
-    fill: #1f2937;
+    fill: #cbd5e1;
   }
 
-  .depth-0 rect,
   .depth-1 rect {
-    fill: var(--color);
-    stroke: none;
+    fill: rgb(20 18 48 / 0.9);
+    stroke-width: 2;
   }
 
-  .depth-0 text,
   .depth-1 text {
-    fill: white;
+    fill: #f8fafc;
     font-weight: 600;
   }
 
-  .depth-0 text {
-    font-size: 20px;
+  .cloud {
+    fill: color-mix(in srgb, var(--color) 30%, #0b0b24);
+    stroke: var(--color);
+    stroke-width: 2.5;
   }
 
-  .node.selected rect {
-    stroke: #fbbf24;
-    stroke-width: 4;
+  .depth-0 text {
+    fill: white;
+    font-weight: 700;
+  }
+
+  .node.selected rect,
+  .node.selected .cloud {
+    stroke: white;
+    stroke-width: 2.5;
   }
 
   input {
@@ -346,10 +558,11 @@
     width: 100%;
     height: 100%;
     padding: 0 12px;
-    border: 2px solid #fbbf24;
+    border: 2px solid white;
     border-radius: 999px;
+    background: #0b0b24;
+    color: white;
     font: inherit;
-    font-size: 15px;
     text-align: center;
     outline: none;
   }
@@ -362,7 +575,7 @@
     margin: 0;
     text-align: center;
     font-size: 12px;
-    color: #a8a29e;
+    color: rgb(255 255 255 / 0.4);
     pointer-events: none;
   }
 

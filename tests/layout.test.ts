@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { BRANCH_COLORS, layoutTree, linkPath } from '../src/lib/layout';
+import { BRANCH_COLORS } from '../src/lib/config';
+import { layoutTree, linkPath, nodeLook } from '../src/lib/layout';
 import { addChild, createNode } from '../src/lib/tree';
 
 function treeWithBranches(count: number) {
@@ -52,11 +53,27 @@ describe('layout', () => {
   it('links a parent outer edge to the child inner edge', () => {
     const { links } = layoutTree(treeWithBranches(1));
     const [{ from, to }] = links;
-    const path = linkPath(links[0]);
+    const path = linkPath(from, to, to.side);
 
     expect(path.startsWith(`M ${from.x + from.width / 2} ${from.y}`)).toBe(
       true,
     );
     expect(path.endsWith(`${to.x - to.width / 2} ${to.y}`)).toBe(true);
+  });
+
+  it('bends a link sideways without moving its ends', () => {
+    const [{ from, to }] = layoutTree(treeWithBranches(1)).links;
+    const straight = linkPath(from, to, to.side);
+    const bent = linkPath(from, to, to.side, { x: 0, y: 30 });
+
+    expect(bent).not.toBe(straight);
+    expect(bent.split(' C ')[0]).toBe(straight.split(' C ')[0]);
+    expect(bent.endsWith(`${to.x - to.width / 2} ${to.y}`)).toBe(true);
+  });
+
+  it('draws deeper nodes with smaller text', () => {
+    const sizes = [0, 1, 2, 3, 9].map((depth) => nodeLook(depth).fontSize);
+    expect(sizes).toEqual([...sizes].sort((a, b) => b - a));
+    expect(nodeLook(9)).toBe(nodeLook(3));
   });
 });
