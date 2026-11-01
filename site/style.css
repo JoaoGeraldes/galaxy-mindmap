@@ -388,6 +388,31 @@ blockquote {
   color: var(--text);
 }
 
+.lead {
+  max-width: 56ch;
+  margin: -12px auto 32px;
+  font-size: 18px;
+  color: var(--muted);
+}
+
+/* Each use case leads with the prompt you could try, set like a quote. */
+.uses p {
+  font-style: italic;
+}
+
+.proof {
+  margin: 48px 0 0;
+}
+
+.proof figcaption {
+  margin-top: 14px;
+}
+
+.proof q {
+  color: var(--text);
+  font-style: italic;
+}
+
 main {
   max-width: 1100px;
   margin: 0 auto;
