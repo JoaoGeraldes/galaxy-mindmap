@@ -31,6 +31,12 @@ export const GLOW = {
   blur: 4,
 };
 
+/** Dropping a dragged node onto another to connect it there. */
+export const DROP = {
+  /** How close (px) the dragged node must come to a node to connect to it. */
+  reach: 40,
+};
+
 /** The liquid neon cloud behind the central topic. */
 export const CLOUD = {
   /** How far the edge ripples, as a fraction of the cloud's size. */

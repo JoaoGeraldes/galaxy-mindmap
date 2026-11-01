@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   addChild,
-  addSibling,
   createNode,
   findNode,
   findParent,
+  moveNode,
   removeNode,
 } from '../src/lib/tree';
 
@@ -35,22 +35,6 @@ describe('tree', () => {
     expect(third.text).toBe('New idea');
   });
 
-  it('adds a sibling right after the selected node', () => {
-    const { root, first } = sampleTree();
-    const sibling = addSibling(root, first.id, 'Between')!;
-    expect(root.children.map((child) => child.text)).toEqual([
-      'First',
-      'Between',
-      'Second',
-    ]);
-    expect(sibling.text).toBe('Between');
-  });
-
-  it('gives the central topic no siblings', () => {
-    const { root } = sampleTree();
-    expect(addSibling(root, root.id)).toBeUndefined();
-  });
-
   it('removes a node together with its whole branch', () => {
     const { root, first, nested } = sampleTree();
     expect(removeNode(root, first.id)).toBe(true);
@@ -62,5 +46,29 @@ describe('tree', () => {
     const { root } = sampleTree();
     expect(removeNode(root, root.id)).toBe(false);
     expect(root.children).toHaveLength(2);
+  });
+
+  it('moves a node with its whole branch under another node', () => {
+    const { root, first, second, nested } = sampleTree();
+    expect(moveNode(root, first.id, second.id)).toBe(true);
+    expect(root.children).toEqual([second]);
+    expect(second.children.at(-1)).toBe(first);
+    expect(first.children).toContain(nested);
+  });
+
+  it('refuses to move a node into its own branch', () => {
+    const { root, first, nested } = sampleTree();
+    expect(moveNode(root, first.id, nested.id)).toBe(false);
+    expect(root.children).toContain(first);
+  });
+
+  it('never moves the central topic', () => {
+    const { root, first } = sampleTree();
+    expect(moveNode(root, root.id, first.id)).toBe(false);
+  });
+
+  it('treats a move to the same parent as no move', () => {
+    const { root, first } = sampleTree();
+    expect(moveNode(root, first.id, root.id)).toBe(false);
   });
 });

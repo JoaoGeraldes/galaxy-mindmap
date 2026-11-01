@@ -2,7 +2,8 @@
   import { onMount } from 'svelte';
   import NodeMenu from './NodeMenu.svelte';
   import { cloudPath } from '../lib/cloud';
-  import { BEAMS, CLOUD, GLOW, PHYSICS } from '../lib/config';
+  import { BEAMS, CLOUD, DROP, GLOW, PHYSICS } from '../lib/config';
+  import { dropTarget } from '../lib/drop';
   import {
     layoutTree,
     linkPath,
@@ -13,9 +14,9 @@
   import { advance, restingWorld, type Held } from '../lib/physics';
   import {
     addChild,
-    addSibling,
     findNode,
     findParent,
+    moveNode,
     removeNode,
     type MindNode,
   } from '../lib/tree';
@@ -67,6 +68,18 @@
       : layout.nodes.find((p) => p.node.id === (hoveredId ?? pressedId)),
   );
   let menuPlace = $derived(menuNode && placeOf(menuNode));
+  // The node the dragged one would connect to if dropped now.
+  let target = $derived(
+    held ? dropTarget(layout, placeOf, held, DROP.reach) : undefined,
+  );
+  let ghost = $derived.by(() => {
+    if (!held || !target) return;
+    const dragged = layout.nodes.find((p) => p.node.id === held!.id)!;
+    const side = held.x < placeOf(target).x ? -1 : 1;
+    const start = { ...placeOf(target), width: target.width };
+    const end = { ...held, width: dragged.width };
+    return { d: linkPath(start, end, side), color: target.color };
+  });
   let strings = $derived(
     layout.links.map(({ from, to }) => {
       const start = { ...placeOf(from), width: from.width };
@@ -141,11 +154,8 @@
     onchange();
   }
 
-  function addNode(id: string, kind: 'child' | 'sibling') {
-    const node =
-      kind === 'sibling' && id !== root.id
-        ? addSibling(root, id)
-        : addChild(root, id);
+  function addNode(id: string) {
+    const node = addChild(root, id);
     if (!node) return;
     onchange();
     startEditing(node.id);
@@ -180,6 +190,13 @@
     held = null;
   }
 
+  function drop() {
+    const moved = held && target && moveNode(root, held.id, target.node.id);
+    if (moved) selectedId = held!.id;
+    release();
+    if (moved) onchange();
+  }
+
   function hover(id: string, event: PointerEvent) {
     if (event.pointerType !== 'mouse') return;
     clearTimeout(hideMenuTimer);
@@ -207,8 +224,7 @@
     if (!selectedId || editingId) return;
     const id = selectedId;
     const actions: Record<string, () => void> = {
-      Tab: () => addNode(id, 'child'),
-      Enter: () => addNode(id, 'sibling'),
+      Tab: () => addNode(id),
       Delete: () => remove(id),
       Backspace: () => remove(id),
       F2: () => startEditing(id),
@@ -339,6 +355,10 @@
         </g>
       {/if}
 
+      {#if ghost}
+        <path class="ghost" d={ghost.d} stroke={ghost.color} />
+      {/if}
+
       {#each layout.nodes as placed (placed.node.id)}
         {@const look = nodeLook(placed.depth)}
         {@const place = placeOf(placed)}
@@ -346,6 +366,7 @@
           class="node depth-{Math.min(placed.depth, 2)}"
           class:selected={placed.node.id === selectedId}
           class:held={placed.node.id === held?.id}
+          class:target={placed === target}
           style:--color={placed.color}
           style:font-size="{look.fontSize}px"
           transform="translate({place.x} {place.y})"
@@ -353,7 +374,7 @@
           tabindex="-1"
           onpointerdown={(event) => press(placed.node.id, event)}
           onpointermove={drag}
-          onpointerup={release}
+          onpointerup={drop}
           onpointercancel={release}
           onpointerenter={(event) => hover(placed.node.id, event)}
           onpointerleave={hideMenuSoon}
@@ -411,8 +432,7 @@
       x={originX + menuPlace.x * view.scale}
       y={originY + (menuPlace.y - menuNode.height / 2) * view.scale}
       isRoot={menuNode.depth === 0}
-      onaddchild={fromMenu((id) => addNode(id, 'child'))}
-      onaddsibling={fromMenu((id) => addNode(id, 'sibling'))}
+      onaddchild={fromMenu(addNode)}
       onrename={fromMenu(startEditing)}
       ondelete={fromMenu(remove)}
       onpointerenter={() => clearTimeout(hideMenuTimer)}
@@ -422,8 +442,7 @@
 
   <p class="hint">
     <span class="mouse-hint">
-      Hover a node for actions · Tab child · Enter sibling · Del remove · Scroll
-      to zoom
+      Hover a node for actions · Tab child · Del remove · Scroll to zoom
     </span>
     <span class="touch-hint">Tap a node for actions</span>
     · Drag a node to stretch it · Drag the background to pan · Double-click background
@@ -545,6 +564,26 @@
   .depth-0 text {
     fill: white;
     font-weight: 700;
+  }
+
+  .ghost {
+    fill: none;
+    stroke-width: 2;
+    stroke-dasharray: 6 6;
+    pointer-events: none;
+    animation: march 0.6s linear infinite;
+  }
+
+  @keyframes march {
+    to {
+      stroke-dashoffset: -12;
+    }
+  }
+
+  .node.target rect,
+  .node.target .cloud {
+    stroke-width: 3;
+    stroke-dasharray: 5 4;
   }
 
   .node.selected rect,

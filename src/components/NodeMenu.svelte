@@ -4,7 +4,6 @@
     y: number;
     isRoot: boolean;
     onaddchild: () => void;
-    onaddsibling: () => void;
     onrename: () => void;
     ondelete: () => void;
     onpointerenter: () => void;
@@ -16,7 +15,6 @@
     y,
     isRoot,
     onaddchild,
-    onaddsibling,
     onrename,
     ondelete,
     onpointerenter,
@@ -35,9 +33,6 @@
   {onpointerleave}
 >
   <button onclick={onaddchild}>+ Child</button>
-  {#if !isRoot}
-    <button onclick={onaddsibling}>+ Sibling</button>
-  {/if}
   <button class="icon" title="Rename" aria-label="Rename" onclick={onrename}>
     <svg viewBox="0 0 24 24">
       <path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" />
