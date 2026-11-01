@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   byTitle,
+  exportFileName,
   fileNameFor,
   loadProjects,
   parseMap,
@@ -118,5 +119,24 @@ describe('projects', () => {
   it('numbers the name when it is already taken, ignoring case', () => {
     const taken = ['ideas.json', 'Ideas-2.json'];
     expect(fileNameFor('Ideas', taken)).toBe('ideas-3.json');
+  });
+
+  it('stamps exported copies with the date and time in the locale order', () => {
+    const when = new Date('2026-11-01T15:28:00Z');
+    const at = (locale: string) =>
+      exportFileName('ideas.json', when, { locale, timeZone: 'UTC' });
+    expect(at('pt-PT')).toBe('ideas-01-11-2026-15-28.json');
+    expect(at('en-US')).toBe('ideas-11-01-2026-15-28.json');
+    expect(at('ja-JP')).toBe('ideas-2026-11-01-15-28.json');
+  });
+
+  it('keeps afternoon times apart from morning ones in every locale', () => {
+    const at = (time: string) =>
+      exportFileName('ideas.json', new Date(`2026-11-01T${time}Z`), {
+        locale: 'ko-KR',
+        timeZone: 'UTC',
+      });
+    expect(at('03:28:00')).not.toBe(at('15:28:00'));
+    expect(at('15:28:00')).toContain('15-28');
   });
 });

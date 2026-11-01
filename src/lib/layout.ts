@@ -1,4 +1,4 @@
-import { NODE_LOOKS, PALETTES } from './config';
+import { NEW_NODE_HINT, NODE_LOOKS, PALETTES } from './config';
 import type { MindNode } from './tree';
 
 const VERTICAL_GAP = 12;
@@ -64,8 +64,13 @@ export function nodeLook(depth: number, textScale = 1) {
 
 export function nodeWidth(text: string, depth: number, textScale = 1): number {
   const { fontSize, paddingX } = nodeLook(depth, textScale);
+  // A new, still empty node is as wide as its hint, so the hint fits.
+  const label = text || NEW_NODE_HINT;
   // Estimated instead of measured so the layout stays a pure, testable function.
-  return Math.max(48, Math.round(text.length * fontSize * 0.58) + 2 * paddingX);
+  return Math.max(
+    48,
+    Math.round(label.length * fontSize * 0.58) + 2 * paddingX,
+  );
 }
 
 function subtreeHeight(node: MindNode, depth: number, scale: number): number {

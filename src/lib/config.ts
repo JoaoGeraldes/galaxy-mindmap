@@ -58,6 +58,9 @@ export const CLOUD = {
   padding: 14,
 };
 
+/** The hint shown in a new node until it is given a name. */
+export const NEW_NODE_HINT = 'Type here…';
+
 /** Text size and box size per depth; the last entry covers deeper levels. */
 export const NODE_LOOKS = [
   { fontSize: 20, height: 60, paddingX: 30 }, // Central topic

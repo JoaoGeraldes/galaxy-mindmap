@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { PALETTES } from '../src/lib/config';
-import { areaAround, layoutTree, linkPath, nodeLook } from '../src/lib/layout';
+import { NEW_NODE_HINT, PALETTES } from '../src/lib/config';
+import {
+  areaAround,
+  layoutTree,
+  linkPath,
+  nodeLook,
+  nodeWidth,
+} from '../src/lib/layout';
 import { addChild, createNode } from '../src/lib/tree';
 
 function treeWithBranches(count: number) {
@@ -111,5 +117,10 @@ describe('layout', () => {
       palette.branches[0],
       palette.branches[1],
     ]);
+  });
+
+  it('makes a new, empty node wide enough for its hint', () => {
+    expect(nodeWidth('', 1)).toBe(nodeWidth(NEW_NODE_HINT, 1));
+    expect(nodeWidth('', 1)).toBeGreaterThan(nodeWidth('Hi', 1));
   });
 });

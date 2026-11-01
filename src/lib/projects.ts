@@ -120,6 +120,32 @@ export function fileNameFor(title: string, taken: string[]): string {
   return name;
 }
 
+/**
+ * The name for an exported copy: the map's file name plus when it was
+ * exported, written in the person's own date order, so copies are easy to
+ * tell apart. Leaving out `locale` uses the system's.
+ */
+export function exportFileName(
+  file: string,
+  when: Date,
+  { locale, timeZone }: { locale?: string; timeZone?: string } = {},
+): string {
+  const stamp = new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    // A 24-hour clock in Latin digits: some languages write AM/PM in their
+    // own script, which wouldn't survive in a safe file name.
+    hourCycle: 'h23',
+    numberingSystem: 'latn',
+    timeZone,
+  }).format(when);
+  const name = file.replace(/\.json$/, '') || FALLBACK_NAME;
+  return `${name}-${slugify(stamp)}.json`;
+}
+
 function isTimestamp(value: unknown): value is string {
   return typeof value === 'string' && !Number.isNaN(Date.parse(value));
 }

@@ -11,6 +11,7 @@
     GLOW,
     HEARTBEAT,
     HISTORY,
+    NEW_NODE_HINT,
     PHYSICS,
   } from '../lib/config';
   import { emptyHistory, record, redo, undo } from '../lib/history';
@@ -83,6 +84,8 @@
   let settled = false;
   // Each version is the whole map as JSON, so a version can never change.
   let history = $state.raw(emptyHistory<string>());
+  // A new node waiting for its name, and the map as it was before it.
+  let draft: { id: string; before: string } | null = null;
 
   let originX = $derived(width / 2 + view.x);
   let originY = $derived(height / 2 + view.y);
@@ -187,6 +190,7 @@
   }
 
   function travel(step: typeof undo) {
+    discardDraft();
     const result = step(history, JSON.stringify(root));
     if (!result) return;
     history = result.history;
@@ -199,14 +203,40 @@
     const node = editingId ? findNode(root, editingId) : undefined;
     const newText = text.trim();
     editingId = null;
+    if (node && draft?.id === node.id) {
+      const { before } = draft;
+      draft = null;
+      if (!newText) return void removeNode(root, node.id);
+      node.text = newText;
+      history = record(history, before, HISTORY.limit);
+      onchange();
+      return;
+    }
     if (!node || !newText) return;
     change(() => (node.text = newText));
   }
 
+  function cancelEditing() {
+    editingId = null;
+    discardDraft();
+  }
+
+  /**
+   * Adds an empty node to name straight away. It only becomes part of the
+   * map, saved and undoable, once it has a name.
+   */
   function addNode(id: string) {
-    let node: MindNode | undefined;
-    change(() => (node = addChild(root, id)));
-    if (node) startEditing(node.id);
+    discardDraft();
+    const before = JSON.stringify(root);
+    const node = addChild(root, id, '');
+    if (!node) return;
+    draft = { id: node.id, before };
+    startEditing(node.id);
+  }
+
+  function discardDraft() {
+    if (draft) removeNode(root, draft.id);
+    draft = null;
   }
 
   function remove(id: string) {
@@ -296,7 +326,7 @@
   function handleEditorKey(event: KeyboardEvent) {
     const input = event.currentTarget as HTMLInputElement;
     if (event.key === 'Enter') finishEditing(input.value);
-    if (event.key === 'Escape') editingId = null;
+    if (event.key === 'Escape') cancelEditing();
   }
 
   function focusAndSelect(input: HTMLInputElement) {
@@ -521,6 +551,7 @@
             >
               <input
                 value={placed.node.text}
+                placeholder={NEW_NODE_HINT}
                 use:focusAndSelect
                 onkeydown={handleEditorKey}
                 onblur={(event) => finishEditing(event.currentTarget.value)}
@@ -812,6 +843,10 @@
       left: auto;
       bottom: auto;
     }
+  }
+
+  input::placeholder {
+    color: var(--text-muted);
   }
 
   input {

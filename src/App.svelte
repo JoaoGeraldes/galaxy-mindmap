@@ -7,6 +7,7 @@
   import type { PreferenceStore } from './lib/preferences';
   import {
     byTitle,
+    exportFileName,
     fileNameFor,
     loadProjects,
     parseMap,
@@ -209,7 +210,7 @@
     });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = active.file;
+    link.download = exportFileName(active.file, new Date());
     link.click();
     URL.revokeObjectURL(link.href);
   }
