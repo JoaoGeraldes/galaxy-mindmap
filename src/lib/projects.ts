@@ -21,9 +21,21 @@ export interface MapFile {
 }
 
 const FILE_VERSION = 2;
-const FALLBACK_NAME = 'Untitled';
-// Characters Windows forbids in file names, plus control characters.
-const UNSAFE_CHARACTERS = /[<>:"/\\|?*\u0000-\u001f]/g;
+const FALLBACK_NAME = 'untitled';
+// Keeps names well clear of path length limits on Windows.
+const MAX_NAME_LENGTH = 60;
+// Letters Unicode can't split into a plain letter plus an accent.
+const SPECIAL_LETTERS: Record<string, string> = {
+  ß: 'ss',
+  æ: 'ae',
+  œ: 'oe',
+  ø: 'o',
+  ł: 'l',
+  đ: 'd',
+  ð: 'd',
+  þ: 'th',
+  ı: 'i',
+};
 
 export function serializeMap({ createdAt, updatedAt, root }: SavedMap): string {
   const data = { version: FILE_VERSION, createdAt, updatedAt, root };
@@ -79,14 +91,32 @@ export function byTitle(a: Project, b: Project): number {
   });
 }
 
+/**
+ * Turns a title into plain lowercase English letters, digits and dashes,
+ * safe on every system: "Ação à vista!" becomes "acao-a-vista".
+ */
+export function slugify(title: string): string {
+  return (
+    title
+      .toLowerCase()
+      .replace(/[ßæœøłđðþı]/g, (letter) => SPECIAL_LETTERS[letter])
+      // Splits "ã" into "a" plus a separate accent mark, then drops the mark.
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .slice(0, MAX_NAME_LENGTH)
+      .replace(/^-+|-+$/g, '')
+  );
+}
+
 /** A file name matching the map title that doesn't clash with `taken`. */
 export function fileNameFor(title: string, taken: string[]): string {
-  const base = title.replace(UNSAFE_CHARACTERS, '').trim() || FALLBACK_NAME;
+  const base = slugify(title) || FALLBACK_NAME;
   // Windows and macOS treat names that differ only in case as the same file.
   const isTaken = (name: string) =>
     taken.some((file) => file.toLowerCase() === name.toLowerCase());
   let name = `${base}.json`;
-  for (let copy = 2; isTaken(name); copy++) name = `${base} (${copy}).json`;
+  for (let copy = 2; isTaken(name); copy++) name = `${base}-${copy}.json`;
   return name;
 }
 

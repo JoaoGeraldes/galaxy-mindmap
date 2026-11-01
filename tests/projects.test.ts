@@ -5,6 +5,7 @@ import {
   loadProjects,
   parseMap,
   serializeMap,
+  slugify,
 } from '../src/lib/projects';
 import { addChild, createNode } from '../src/lib/tree';
 
@@ -88,20 +89,34 @@ describe('projects', () => {
     expect(titles).toEqual(['alpha', 'beta', 'Gamma']);
   });
 
-  it('names a file after the map title', () => {
-    expect(fileNameFor('Holiday plans', [])).toBe('Holiday plans.json');
+  it('names a file after the map title, with dashes for spaces', () => {
+    expect(fileNameFor('Holiday plans', [])).toBe('holiday-plans.json');
   });
 
-  it('leaves out characters that file names cannot contain', () => {
-    expect(fileNameFor('Q1: plans / goals?', [])).toBe('Q1 plans  goals.json');
+  it('turns accented letters into plain English ones', () => {
+    expect(slugify('Ação à vista, coração')).toBe('acao-a-vista-coracao');
+    expect(slugify('Straße, Æsir, Øresund, Łódź')).toBe(
+      'strasse-aesir-oresund-lodz',
+    );
   });
 
-  it('falls back to Untitled when nothing usable is left', () => {
-    expect(fileNameFor(' ?* ', [])).toBe('Untitled.json');
+  it('turns punctuation into single dashes, never at either end', () => {
+    expect(slugify('  Q1: plans / goals?! ')).toBe('q1-plans-goals');
+  });
+
+  it('keeps file names reasonably short', () => {
+    const name = slugify('word '.repeat(40));
+    expect(name.length).toBeLessThanOrEqual(60);
+    expect(name.endsWith('-')).toBe(false);
+  });
+
+  it('falls back to untitled when nothing usable is left', () => {
+    expect(fileNameFor(' ?* ', [])).toBe('untitled.json');
+    expect(fileNameFor('日本語', [])).toBe('untitled.json');
   });
 
   it('numbers the name when it is already taken, ignoring case', () => {
-    const taken = ['ideas.json', 'Ideas (2).json'];
-    expect(fileNameFor('Ideas', taken)).toBe('Ideas (3).json');
+    const taken = ['ideas.json', 'Ideas-2.json'];
+    expect(fileNameFor('Ideas', taken)).toBe('ideas-3.json');
   });
 });
