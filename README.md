@@ -11,6 +11,7 @@ npm run dev:web   # web version, with live reload
 npm start         # build and run the desktop app
 npm run build     # build the web version into dist/
 npm run check     # types, formatting and tests
+npm run site      # preview the website in site/
 ```
 
 ## Changing the logo
@@ -22,3 +23,10 @@ window icon can't be an SVG, so after changing the logo, re-export it as a
 ```sh
 npx sharp-cli -i src/assets/logo.svg -o electron/icon.png resize 512 512
 ```
+
+## Website
+
+`site/` is a static page published to
+https://joaogeraldes.github.io/galaxy-mindmap/ on every push to `main`, together
+with the web version of the app at `/app`. Once, in the repository's
+**Settings → Pages**, set **Source** to **GitHub Actions**.

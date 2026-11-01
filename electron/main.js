@@ -99,6 +99,12 @@ async function createWindow() {
     webPreferences: { preload: path.join(import.meta.dirname, 'preload.cjs') },
   });
 
+  // Links such as the website open in the person's browser, not in here.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https://')) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+
   if (isDev) {
     const { createServer } = await import('vite');
     const server = await createServer({

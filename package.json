@@ -1,5 +1,5 @@
 {
-  "name": "mind-map",
+  "name": "galaxy-mindmap",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,6 +8,8 @@
     "dev": "electron . --dev",
     "dev:web": "vite",
     "build": "vite build",
+    "site": "npm run site:build && vite site",
+    "site:build": "vite build --outDir site/app --emptyOutDir && node -e \"require('fs').copyFileSync('src/assets/logo.svg', 'site/logo.svg')\"",
     "start": "vite build && electron .",
     "test": "vitest run",
     "check": "svelte-check && prettier --check . && vitest run"

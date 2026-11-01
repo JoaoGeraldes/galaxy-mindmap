@@ -1,5 +1,6 @@
 <script lang="ts">
   import logo from '../assets/logo.svg';
+  import { WEBSITE_URL } from '../lib/config';
   import { byTitle, type Project } from '../lib/projects';
 
   interface Props {
@@ -137,7 +138,9 @@
             aria-label="Move {project.root.text} to trash"
             onclick={() => ondelete(project.id)}
           >
-            ×
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13M10 11v5M14 11v5" />
+            </svg>
           </button>
         </li>
       {/each}
@@ -165,39 +168,51 @@
         Export…
       </button>
     </footer>
+    <a class="about" href={WEBSITE_URL} target="_blank" rel="noreferrer">
+      About Galaxy Mind Map ↗
+    </a>
   {/if}
 </aside>
 
 <style>
   aside {
+    /* Comfortable for a mouse; touch screens get more below. */
+    --tap: 44px;
     display: flex;
     flex: none;
     flex-direction: column;
-    width: 260px;
+    width: 280px;
     border-right: 1px solid var(--border);
     background: var(--surface);
     box-shadow: 1px 0 24px rgb(124 58 237 / 0.12);
     transition: width 0.2s ease;
   }
 
+  /* Fingers are bigger and less precise than a pointer. */
+  @media (pointer: coarse) {
+    aside {
+      --tap: 48px;
+    }
+  }
+
   aside.collapsed {
     align-items: center;
-    gap: 8px;
-    width: 56px;
-    padding-top: 12px;
+    gap: 16px;
+    width: calc(var(--tap) + 20px);
+    padding-top: 14px;
   }
 
   .icon {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
+    width: var(--tap);
+    height: var(--tap);
     padding: 0;
   }
 
   .icon svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -206,14 +221,14 @@
   }
 
   header {
-    padding: 16px;
+    padding: 16px 16px 20px;
   }
 
   .title-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
   }
 
   .title-row .icon {
@@ -245,7 +260,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     font-size: 13px;
     color: var(--text-muted);
   }
@@ -269,7 +284,8 @@
   }
 
   .link {
-    padding: 2px 4px;
+    min-height: 36px;
+    padding: 0 8px;
     border: none;
     background: none;
     color: var(--accent);
@@ -283,19 +299,26 @@
 
   .new {
     width: 100%;
+    min-height: var(--tap);
+    font-size: 15px;
   }
 
   ul {
+    display: flex;
     flex: 1;
+    flex-direction: column;
+    gap: 6px;
     margin: 0;
-    padding: 0 8px;
+    padding: 0 12px;
     list-style: none;
     overflow-y: auto;
   }
 
   li {
     display: flex;
-    border-radius: 8px;
+    align-items: center;
+    gap: 8px;
+    border-radius: 10px;
   }
 
   li:hover {
@@ -316,7 +339,11 @@
     display: flex;
     flex: 1;
     flex-direction: column;
+    justify-content: center;
+    gap: 2px;
     min-width: 0;
+    min-height: calc(var(--tap) + 12px);
+    padding: 8px 12px;
     text-align: left;
   }
 
@@ -327,14 +354,34 @@
     white-space: nowrap;
   }
 
+  .title {
+    font-size: 15px;
+  }
+
   .file {
     font-size: 12px;
     color: var(--text-muted);
   }
 
   .delete {
+    flex: none;
+    width: var(--tap);
+    height: var(--tap);
+    margin-right: 4px;
+    padding: 0;
+    border-radius: 8px;
     color: var(--text-muted);
     visibility: hidden;
+  }
+
+  .delete svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   li:hover .delete,
@@ -342,13 +389,21 @@
     visibility: visible;
   }
 
+  /* Without hover, the delete button has to stay visible to be usable. */
+  @media (hover: none) {
+    .delete {
+      visibility: visible;
+    }
+  }
+
   .delete:hover {
     color: var(--danger);
+    background: var(--danger-bg);
   }
 
   .unreadable {
-    margin: 8px 16px 0;
-    padding: 8px 10px;
+    margin: 12px 16px 0;
+    padding: 10px 12px;
     border-radius: 8px;
     background: var(--warning-bg);
     color: var(--warning);
@@ -358,13 +413,31 @@
 
   footer {
     display: flex;
-    gap: 8px;
-    padding: 16px;
+    gap: 12px;
+    padding: 16px 16px 8px;
   }
 
   footer > * {
+    display: grid;
     flex: 1;
-    padding: 6px 4px;
-    text-align: center;
+    place-items: center;
+    min-height: var(--tap);
+    box-sizing: border-box;
+    padding: 0 8px;
+  }
+
+  .about {
+    display: grid;
+    place-items: center;
+    min-height: 36px;
+    margin-bottom: env(safe-area-inset-bottom);
+    padding-bottom: 8px;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-decoration: none;
+  }
+
+  .about:hover {
+    color: var(--accent);
   }
 </style>

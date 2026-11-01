@@ -58,6 +58,9 @@ export const CLOUD = {
   padding: 14,
 };
 
+/** The app's website, published from site/ by .github/workflows/pages.yml. */
+export const WEBSITE_URL = 'https://joaogeraldes.github.io/galaxy-mindmap/';
+
 /** The hint shown in a new node until it is given a name. */
 export const NEW_NODE_HINT = 'Type here…';
 

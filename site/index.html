@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Galaxy Mind Map — ideas in orbit</title>
+    <meta
+      name="description"
+      content="A calm, elastic mind map for desktop and the browser. Branch out, drag ideas around and watch them settle into place."
+    />
+    <meta name="theme-color" content="#07071a" />
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&display=swap"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="site.js" defer></script>
+  </head>
+  <body>
+    <div class="stars" aria-hidden="true"></div>
+
+    <header class="hero">
+      <nav>
+        <a class="brand" href="./">
+          <img src="logo.svg" alt="" />
+          Galaxy Mind Map
+        </a>
+        <a href="https://github.com/JoaoGeraldes/galaxy-mindmap">GitHub</a>
+      </nav>
+
+      <div class="hero-text">
+        <h1>Ideas in <span class="shimmer">orbit</span></h1>
+        <p>
+          A calm, elastic place to think. Branch out, drag ideas around and
+          watch them settle into place, on your desktop or in the browser.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="app/">Open in your browser</a>
+          <a
+            class="button"
+            href="https://github.com/JoaoGeraldes/galaxy-mindmap"
+            >Get the desktop app</a
+          >
+        </div>
+      </div>
+
+      <figure class="demo">
+        <svg
+          id="demo"
+          viewBox="-430 -230 860 460"
+          role="img"
+          aria-label="A small mind map whose ideas you can drag around"
+        ></svg>
+        <figcaption>Go on, drag a star. It springs back.</figcaption>
+      </figure>
+    </header>
+
+    <main>
+      <section class="reveal">
+        <h2>Made for thinking, not fiddling</h2>
+        <ul class="features">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 12c4-8 12 8 16 0" />
+            </svg>
+            <h3>Elastic connections</h3>
+            <p>Strings stretch and spring back, so the map feels alive.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 17 17 7M9 7h8v8" />
+            </svg>
+            <h3>Drop to reconnect</h3>
+            <p>Drag an idea onto another to move it, whole branch included.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 3h8l4 4v14H6zM14 3v4h4" />
+            </svg>
+            <h3>Plain files</h3>
+            <p>Every map is one readable .json file. Sync it, back it up.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 5h18v11H3zM8 20h8M12 16v4" />
+            </svg>
+            <h3>Desktop or browser</h3>
+            <p>A desktop app for your folders, or the browser, no install.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" />
+            </svg>
+            <h3>Undo anything</h3>
+            <p>Every change can be undone, so experimenting is safe.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="4.5" r="1.5" />
+              <path d="M5 8l7 1.5L19 8M12 9.5V14m0 0-3 6m3-6 3 6" />
+            </svg>
+            <h3>Comfortable for everyone</h3>
+            <p>Light or dark, larger text, colour-blind safe, calm motion.</p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="reveal">
+        <h2>Three keys are all you need</h2>
+        <ol class="keys">
+          <li><kbd>Tab</kbd><span>Add an idea</span></li>
+          <li><kbd>F2</kbd><span>Rename it</span></li>
+          <li><kbd>Ctrl Z</kbd><span>Change your mind</span></li>
+        </ol>
+      </section>
+
+      <section class="reveal closing">
+        <h2>Your thoughts, your files</h2>
+        <p>
+          No account and no cloud. On the desktop, maps live in a folder you
+          choose. In the browser, they stay on your device, ready to export.
+        </p>
+        <a class="button primary" href="app/">Start a map</a>
+      </section>
+    </main>
+
+    <footer>
+      <img src="logo.svg" alt="" />
+      Galaxy Mind Map ·
+      <a href="https://github.com/JoaoGeraldes/galaxy-mindmap"
+        >Source on GitHub</a
+      >
+    </footer>
+  </body>
+</html>
