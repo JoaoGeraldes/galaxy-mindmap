@@ -12,7 +12,8 @@
     onexport: () => void;
     onimport: (file: File) => void;
     onchangefolder: () => void;
-    onshowfolder: () => void;
+    /** Absent where there's no file explorer to show the folder in. */
+    onshowfolder?: () => void;
   }
 
   let {
@@ -54,9 +55,15 @@
         <path d="M3 6h6l2 2h10v11H3z" />
       </svg>
       <span class="folder-name">{folderName}</span>
-      <button class="link" onclick={onshowfolder} title="Open in file explorer">
-        Show
-      </button>
+      {#if onshowfolder}
+        <button
+          class="link"
+          onclick={onshowfolder}
+          title="Open in file explorer"
+        >
+          Show
+        </button>
+      {/if}
       <button class="link" onclick={onchangefolder} title="Use another folder">
         Change
       </button>

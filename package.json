@@ -6,6 +6,7 @@
   "main": "electron/main.js",
   "scripts": {
     "dev": "electron . --dev",
+    "dev:web": "vite",
     "build": "vite build",
     "start": "vite build && electron .",
     "test": "vitest run",

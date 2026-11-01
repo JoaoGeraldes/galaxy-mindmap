@@ -1,21 +1,11 @@
-import type { MapFile } from './lib/projects';
-
-/** File access provided by electron/preload.cjs. */
-interface MapFolder {
-  /** Asks the user for a folder; resolves to its path, or null if cancelled. */
-  chooseFolder(): Promise<string | null>;
-  /** Reopens a known folder; resolves to false if it no longer exists. */
-  openFolder(path: string): Promise<boolean>;
-  readMaps(): Promise<MapFile[]>;
-  writeMap(file: string, text: string): Promise<void>;
-  renameMap(from: string, to: string): Promise<void>;
-  /** Moves a map to the system trash, so it can be restored. */
-  trashMap(file: string): Promise<void>;
-  showFolder(): Promise<void>;
-}
+import type { DesktopFiles } from './lib/desktop-folder';
+import type { Directory } from './lib/web-folder';
 
 declare global {
   interface Window {
-    files: MapFolder;
+    /** Present only in the desktop app; see electron/preload.cjs. */
+    files?: DesktopFiles;
+    /** Present only in browsers that support the File System Access API. */
+    showDirectoryPicker?(options: { mode: 'readwrite' }): Promise<Directory>;
   }
 }

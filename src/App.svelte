@@ -3,6 +3,7 @@
   import MindMap from './components/MindMap.svelte';
   import Sidebar from './components/Sidebar.svelte';
   import Welcome from './components/Welcome.svelte';
+  import type { MapFolder } from './lib/folder';
   import {
     byTitle,
     fileNameFor,
@@ -24,7 +25,7 @@
     retry?: () => void;
   }
 
-  const LAST_FOLDER_KEY = 'mind-map:last-folder';
+  let { storage }: { storage: MapFolder } = $props();
 
   // Undefined while the last folder is being reopened, so the welcome
   // screen doesn't flash up on every launch.
@@ -42,23 +43,17 @@
   let active = $derived(projects[activeIndex]);
 
   onMount(async () => {
-    const lastFolder = localStorage.getItem(LAST_FOLDER_KEY);
-    if (lastFolder && (await window.files.openFolder(lastFolder))) {
-      await openMaps(lastFolder);
-      return;
-    }
-    if (lastFolder) {
-      folderProblem = `“${lastFolder}” could not be found. It may have been moved, renamed or disconnected.`;
+    try {
+      const lastFolder = await storage.reopenFolder();
+      if (lastFolder) return await openMaps(lastFolder);
+    } catch (error) {
+      folderProblem = errorMessage(error);
     }
     folder = null;
   });
 
   function errorMessage(error: unknown): string {
-    // Electron wraps errors from the main process in a technical prefix.
-    return String((error as Error)?.message ?? error).replace(
-      /^Error invoking remote method '\w+': (Error: )?/,
-      '',
-    );
+    return String((error as Error)?.message ?? error);
   }
 
   function enqueue(task: () => Promise<void>) {
@@ -71,13 +66,17 @@
 
   async function chooseFolder() {
     await fileQueue;
-    const chosen = await window.files.chooseFolder();
-    if (chosen) await openMaps(chosen);
+    try {
+      const chosen = await storage.chooseFolder();
+      if (chosen) await openMaps(chosen);
+    } catch (error) {
+      folderProblem = errorMessage(error);
+    }
   }
 
   async function openMaps(path: string) {
     try {
-      const loaded = loadProjects(await window.files.readMaps());
+      const loaded = loadProjects(await storage.readMaps());
       projects = loaded.projects;
       unreadable = loaded.unreadable;
       activeId = firstMapId();
@@ -85,7 +84,6 @@
       folder = path;
       folderProblem = '';
       status = null;
-      localStorage.setItem(LAST_FOLDER_KEY, path);
     } catch (error) {
       folderProblem = `Couldn't open “${path}”: ${errorMessage(error)}`;
       folder = null;
@@ -100,11 +98,11 @@
       .map((p) => p.file);
     const file = fileNameFor(project.root.text, [...unreadable, ...otherFiles]);
     if (project.file && project.file !== file) {
-      await window.files.renameMap(project.file, file);
+      await storage.renameMap(project.file, file);
     }
     project.file = file;
     project.updatedAt = new Date().toISOString();
-    await window.files.writeMap(file, serializeMap(project));
+    await storage.writeMap(file, serializeMap(project));
   }
 
   function save(
@@ -149,23 +147,32 @@
   function deleteMap(id: string) {
     const project = projects.find((p) => p.id === id);
     if (!project) return;
-    const question = `Move “${project.root.text}” to the trash?\n\nYou can restore ${project.file} from there.`;
-    if (!confirm(question)) return;
-    status = { kind: 'busy', text: `Moving ${project.file} to the trash…` };
+    const { file, root } = project;
+    const words = storage.removesToTrash
+      ? {
+          question: `Move “${root.text}” to the trash?\n\nYou can restore ${file} from there.`,
+          busy: `Moving ${file} to the trash…`,
+          done: `Moved ${file} to the trash`,
+          failed: `Couldn't move ${file} to the trash`,
+        }
+      : {
+          question: `Delete “${root.text}” for good?\n\n${file} can't be restored afterwards.`,
+          busy: `Deleting ${file}…`,
+          done: `Deleted ${file}`,
+          failed: `Couldn't delete ${file}`,
+        };
+    if (!confirm(words.question)) return;
+    status = { kind: 'busy', text: words.busy };
     enqueue(async () => {
       try {
-        if (project.file) await window.files.trashMap(project.file);
+        if (file) await storage.removeMap(file);
         projects = projects.filter((p) => p.id !== id);
         if (activeId === id) selectMap(firstMapId());
-        status = {
-          kind: 'done',
-          text: `Moved ${project.file} to the trash`,
-          at: new Date(),
-        };
+        status = { kind: 'done', text: words.done, at: new Date() };
       } catch (error) {
         status = {
           kind: 'error',
-          text: `Couldn't move ${project.file} to the trash`,
+          text: words.failed,
           detail: errorMessage(error),
         };
       }
@@ -218,7 +225,7 @@
       onexport={exportActive}
       onimport={importFile}
       onchangefolder={chooseFolder}
-      onshowfolder={() => window.files.showFolder()}
+      onshowfolder={storage.showFolder}
     />
 
     <div class="canvas">

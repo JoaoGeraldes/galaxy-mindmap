@@ -9,3 +9,16 @@
   (`tests/<name>.test.ts` covers `src/**/<name>.ts`). Add or update tests for the change.
   Before finishing, run `npm run check` (types, formatting and all tests).
 - Never commit; leave changes for the user to review.
+
+## Design
+
+- Prefer pure functions: logic takes data and returns data. Keep side effects (files,
+  storage, the DOM, Electron) at the edges, in as little code as possible.
+- Composition over inheritance: build behaviour from small functions and plain objects
+  passed in as arguments. Don't extend classes.
+- Avoid coupling: depend on interfaces, never on a platform. The app only talks to
+  `MapFolder` (`src/lib/folder.ts`); each platform has its own adapter
+  (`desktop-folder.ts`, `web-folder.ts`) and only `src/main.ts` chooses one.
+  Components never touch `window.files` or browser file APIs directly.
+- Pass dependencies in (storage, pickers, clocks) so tests can use plain fakes.
+- A new platform is a new adapter, not `if (desktop)` branches in shared code.
