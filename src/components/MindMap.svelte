@@ -16,6 +16,7 @@
   import { emptyHistory, record, redo, undo } from '../lib/history';
   import { dropTarget } from '../lib/drop';
   import {
+    areaAround,
     layoutTree,
     linkPath,
     nodeLook,
@@ -93,6 +94,14 @@
     const end = { ...held, width: dragged.width };
     return { d: linkPath(start, end, side), color: target.color };
   });
+  // The strings' glow gets an explicit area: measured from the strings
+  // themselves it would be zero-high while they are all flat, hiding them.
+  let glowArea = $derived(
+    areaAround(
+      layout.nodes.map((placed) => ({ ...placed, ...placeOf(placed) })),
+      CLOUD.padding + 4 * GLOW.blur + 40,
+    ),
+  );
   let strings = $derived(
     layout.links.map(({ from, to }) => {
       const start = { ...placeOf(from), width: from.width };
@@ -359,10 +368,17 @@
           <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
+      <filter id="string-glow" filterUnits="userSpaceOnUse" {...glowArea}>
+        <feGaussianBlur stdDeviation={GLOW.blur} result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
     </defs>
 
     <g transform="translate({originX} {originY}) scale({view.scale})">
-      <g filter={GLOW.blur ? 'url(#glow)' : undefined}>
+      <g filter={GLOW.blur ? 'url(#string-glow)' : undefined}>
         {#each strings as { id, d, color, isMain } (id)}
           <path
             class="link"

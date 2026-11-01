@@ -22,6 +22,11 @@ export interface Point {
   y: number;
 }
 
+export interface Area extends Point {
+  width: number;
+  height: number;
+}
+
 /** Anything with a centre and a width, such as a node in motion. */
 export interface Box extends Point {
   width: number;
@@ -130,4 +135,21 @@ export function linkPath(
   const bendY = (bend.y * 4) / 3;
   const middleX = (startX + endX) / 2 + bendX;
   return `M ${startX} ${from.y} C ${middleX} ${from.y + bendY}, ${middleX} ${to.y + bendY}, ${endX} ${to.y}`;
+}
+
+/** The smallest area holding every box, grown by `padding` on each side. */
+export function areaAround(
+  boxes: (Point & { width: number; height: number })[],
+  padding: number,
+): Area {
+  const left = Math.min(...boxes.map((b) => b.x - b.width / 2));
+  const right = Math.max(...boxes.map((b) => b.x + b.width / 2));
+  const top = Math.min(...boxes.map((b) => b.y - b.height / 2));
+  const bottom = Math.max(...boxes.map((b) => b.y + b.height / 2));
+  return {
+    x: left - padding,
+    y: top - padding,
+    width: right - left + 2 * padding,
+    height: bottom - top + 2 * padding,
+  };
 }

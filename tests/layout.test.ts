@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BRANCH_COLORS } from '../src/lib/config';
-import { layoutTree, linkPath, nodeLook } from '../src/lib/layout';
+import { areaAround, layoutTree, linkPath, nodeLook } from '../src/lib/layout';
 import { addChild, createNode } from '../src/lib/tree';
 
 function treeWithBranches(count: number) {
@@ -75,5 +75,16 @@ describe('layout', () => {
     const sizes = [0, 1, 2, 3, 9].map((depth) => nodeLook(depth).fontSize);
     expect(sizes).toEqual([...sizes].sort((a, b) => b - a));
     expect(nodeLook(9)).toBe(nodeLook(3));
+  });
+
+  it('holds every box in one area, even when they all sit in a line', () => {
+    const area = areaAround(
+      [
+        { x: 0, y: 0, width: 100, height: 40 },
+        { x: 200, y: 0, width: 60, height: 20 },
+      ],
+      10,
+    );
+    expect(area).toEqual({ x: -60, y: -30, width: 300, height: 60 });
   });
 });
