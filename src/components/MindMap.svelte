@@ -3,7 +3,15 @@
   import NodeMenu from './NodeMenu.svelte';
   import UndoBar from './UndoBar.svelte';
   import { cloudPath } from '../lib/cloud';
-  import { BEAMS, CLOUD, DROP, GLOW, HISTORY, PHYSICS } from '../lib/config';
+  import {
+    BEAMS,
+    CLOUD,
+    DROP,
+    GLOW,
+    HEARTBEAT,
+    HISTORY,
+    PHYSICS,
+  } from '../lib/config';
   import { emptyHistory, record, redo, undo } from '../lib/history';
   import { dropTarget } from '../lib/drop';
   import {
@@ -338,6 +346,9 @@
     ondblclick={resetView}
     style:--beam-length={BEAMS.lengthPercent}
     style:--trip="{BEAMS.secondsPerTrip}s"
+    style:--beat="{HEARTBEAT.seconds}s"
+    style:--ring-scale={HEARTBEAT.ringScale}
+    style:--swell={HEARTBEAT.swell}
   >
     <defs>
       <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -409,6 +420,17 @@
           onpointerleave={hideMenuSoon}
           ondblclick={() => startEditing(placed.node.id)}
         >
+          {#if placed.node.id === selectedId}
+            {@const pad = placed.depth === 0 ? CLOUD.padding : 0}
+            <rect
+              class="heartbeat"
+              x={-placed.width / 2 - pad}
+              y={-placed.height / 2 - pad}
+              width={placed.width + 2 * pad}
+              height={placed.height + 2 * pad}
+              rx={placed.depth === 1 ? 12 : placed.height / 2 + pad}
+            />
+          {/if}
           {#if placed.depth === 0}
             <path
               class="cloud"
@@ -623,10 +645,71 @@
     stroke-dasharray: 5 4;
   }
 
-  .node.selected rect,
+  .node.selected rect:not(.heartbeat),
   .node.selected .cloud {
     stroke: white;
     stroke-width: 2.5;
+  }
+
+  /* Only size and opacity animate, which browsers handle cheaply. */
+  .node.selected > :is(rect, .cloud) {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: swell var(--beat) ease-out infinite;
+  }
+
+  .node.selected > .heartbeat {
+    fill: none;
+    stroke: var(--color);
+    stroke-width: 2;
+    pointer-events: none;
+    animation-name: ripple;
+  }
+
+  /* Lub-dub: two beats close together, then a rest. */
+  @keyframes swell {
+    0%,
+    16%,
+    34%,
+    100% {
+      transform: scale(1);
+    }
+    8% {
+      transform: scale(var(--swell));
+    }
+    24% {
+      transform: scale(calc((var(--swell) + 1) / 2));
+    }
+  }
+
+  @keyframes ripple {
+    0% {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+    18% {
+      transform: scale(calc((var(--ring-scale) + 1) / 2));
+      opacity: 0;
+    }
+    19% {
+      transform: scale(1);
+      opacity: 0.5;
+    }
+    45%,
+    100% {
+      transform: scale(var(--ring-scale));
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .node.selected > :is(rect, .cloud) {
+      animation: none;
+    }
+
+    .node.selected > .heartbeat {
+      display: none;
+    }
   }
 
   input {

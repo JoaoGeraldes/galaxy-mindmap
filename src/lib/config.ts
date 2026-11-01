@@ -31,6 +31,16 @@ export const GLOW = {
   blur: 4,
 };
 
+/** The double beat of the selected node. */
+export const HEARTBEAT = {
+  /** Seconds per beat, rest included; about 75 beats a minute. */
+  seconds: 1.6,
+  /** How far the ring ripples out, as a multiple of the node's size. */
+  ringScale: 1.35,
+  /** How much the node itself swells on the beat. */
+  swell: 1.06,
+};
+
 /** How many changes to a map can be undone. */
 export const HISTORY = {
   limit: 100,
