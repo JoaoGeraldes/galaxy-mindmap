@@ -66,15 +66,72 @@ export const NODE_LOOKS = [
   { fontSize: 12, height: 24, paddingX: 12 }, // Everything deeper
 ];
 
-/** Main branch colours, bright enough to read on the dark canvas. */
-export const ROOT_COLOR = '#a78bfa';
-export const BRANCH_COLORS = [
-  '#a78bfa',
-  '#60a5fa',
-  '#f472b6',
-  '#34d399',
-  '#fbbf24',
-  '#22d3ee',
-  '#fb923c',
-  '#e879f9',
-];
+/** How much bigger node text and boxes get at each text size setting. */
+export const TEXT_SIZES = {
+  normal: 1,
+  large: 1.2,
+  larger: 1.4,
+};
+
+/**
+ * Colours for the central topic and the main branches, per theme. Light
+ * themes need darker shades to stand out on white.
+ */
+export const PALETTES = {
+  vivid: {
+    dark: {
+      root: '#a78bfa',
+      branches: [
+        '#a78bfa',
+        '#60a5fa',
+        '#f472b6',
+        '#34d399',
+        '#fbbf24',
+        '#22d3ee',
+        '#fb923c',
+        '#e879f9',
+      ],
+    },
+    light: {
+      root: '#7c3aed',
+      branches: [
+        '#7c3aed',
+        '#2563eb',
+        '#db2777',
+        '#059669',
+        '#d97706',
+        '#0891b2',
+        '#ea580c',
+        '#c026d3',
+      ],
+    },
+  },
+  // Based on the Okabe–Ito palette, which stays distinguishable with the
+  // common kinds of colour blindness.
+  colourBlindSafe: {
+    dark: {
+      root: '#56b4e9',
+      branches: [
+        '#e69f00',
+        '#56b4e9',
+        '#f0e442',
+        '#cc79a7',
+        '#009e73',
+        '#d55e00',
+        '#bbbbbb',
+      ],
+    },
+    light: {
+      root: '#0072b2',
+      branches: [
+        '#0072b2',
+        '#d55e00',
+        '#009e73',
+        '#cc79a7',
+        '#b07a00',
+        '#56b4e9',
+        '#555555',
+      ],
+    },
+  },
+};

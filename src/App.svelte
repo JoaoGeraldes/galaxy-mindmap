@@ -4,6 +4,7 @@
   import Sidebar from './components/Sidebar.svelte';
   import Welcome from './components/Welcome.svelte';
   import type { MapFolder } from './lib/folder';
+  import type { PreferenceStore } from './lib/preferences';
   import {
     byTitle,
     fileNameFor,
@@ -25,7 +26,15 @@
     retry?: () => void;
   }
 
-  let { storage }: { storage: MapFolder } = $props();
+  let {
+    storage,
+    preferenceStore,
+  }: { storage: MapFolder; preferenceStore: PreferenceStore } = $props();
+
+  // Read once at start; from then on this copy is the one that changes.
+  // svelte-ignore state_referenced_locally
+  let preferences = $state(preferenceStore.load());
+  $effect(() => preferenceStore.save($state.snapshot(preferences)));
 
   // Undefined while the last folder is being reopened, so the welcome
   // screen doesn't flash up on every launch.
@@ -242,6 +251,7 @@
             bind:root={projects[activeIndex].root}
             onchange={() => save(projects[activeIndex])}
             onexport={exportActive}
+            bind:preferences
             editRootOnStart={activeId === newMapId}
           />
         {/key}

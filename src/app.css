@@ -17,6 +17,62 @@
   --warning: #fcd34d;
   --warning-bg: rgb(251 191 36 / 0.12);
   --success: #34d399;
+  /* The map and the controls floating over it. */
+  --canvas: #07071a;
+  --dots: rgb(255 255 255 / 0.07);
+  --aura-centre: rgb(124 58 237 / 0.18);
+  --aura-edge: rgb(0 0 0 / 0.55);
+  --node-fill: rgb(12 12 32 / 0.85);
+  --node-fill-main: rgb(20 18 48 / 0.9);
+  --node-text: #cbd5e1;
+  --node-text-main: #f8fafc;
+  --root-text: white;
+  --cloud-base: #0b0b24;
+  --selected: white;
+  --beam-core: white;
+  --floating: rgb(20 18 48 / 0.85);
+  --floating-hover: rgb(76 29 149 / 0.9);
+  --panel: rgb(15 13 38 / 0.95);
+  --glow: rgb(124 58 237 / 0.35);
+  --key: rgb(255 255 255 / 0.08);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f5f3ff;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --border: rgb(109 40 217 / 0.15);
+  --border-strong: rgb(109 40 217 / 0.3);
+  --text: #1e1b4b;
+  --text-muted: #64748b;
+  --accent: #6d28d9;
+  --accent-fill: #7c3aed;
+  --accent-hover: #6d28d9;
+  --hover: rgb(124 58 237 / 0.08);
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --warning: #92400e;
+  --warning-bg: #fffbeb;
+  --success: #059669;
+  --canvas: #f7f5ff;
+  --dots: rgb(30 27 75 / 0.1);
+  /* A glow reads as a stain on a light canvas, so there's none. */
+  --aura-centre: transparent;
+  --aura-edge: rgb(30 27 75 / 0.06);
+  --node-fill: rgb(255 255 255 / 0.92);
+  --node-fill-main: #ffffff;
+  --node-text: #334155;
+  --node-text-main: #1e1b4b;
+  --root-text: #1e1b4b;
+  --cloud-base: #ffffff;
+  --selected: #1e1b4b;
+  --beam-core: #ffffff;
+  --floating: rgb(255 255 255 / 0.92);
+  --floating-hover: #ede9fe;
+  --panel: rgb(255 255 255 / 0.97);
+  --glow: rgb(124 58 237 / 0.2);
+  --key: rgb(30 27 75 / 0.07);
 }
 
 html,
@@ -67,16 +123,16 @@ button:disabled:hover {
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgb(20 18 48 / 0.85);
+  background: var(--floating);
   box-shadow:
     0 0 0 1px var(--border-strong),
-    0 0 18px rgb(124 58 237 / 0.35);
+    0 0 18px var(--glow);
   color: var(--text);
   cursor: pointer;
 }
 
 .round:hover {
-  background: rgb(76 29 149 / 0.9);
+  background: var(--floating-hover);
 }
 
 .round svg {
@@ -93,7 +149,7 @@ button:disabled:hover {
   background: var(--accent-fill);
   border-color: var(--accent-fill);
   color: white;
-  box-shadow: 0 0 16px rgb(124 58 237 / 0.4);
+  box-shadow: 0 0 16px var(--glow);
 }
 
 .primary:hover {

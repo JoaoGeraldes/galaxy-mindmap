@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BRANCH_COLORS } from '../src/lib/config';
+import { PALETTES } from '../src/lib/config';
 import { areaAround, layoutTree, linkPath, nodeLook } from '../src/lib/layout';
 import { addChild, createNode } from '../src/lib/tree';
 
@@ -32,9 +32,9 @@ describe('layout', () => {
     const colorOf = (id: string) =>
       nodes.find((placed) => placed.node.id === id)!.color;
 
-    expect(colorOf(root.children[0].id)).toBe(BRANCH_COLORS[0]);
-    expect(colorOf(root.children[1].id)).toBe(BRANCH_COLORS[1]);
-    expect(colorOf(child.id)).toBe(BRANCH_COLORS[0]);
+    expect(colorOf(root.children[0].id)).toBe(PALETTES.vivid.dark.branches[0]);
+    expect(colorOf(root.children[1].id)).toBe(PALETTES.vivid.dark.branches[1]);
+    expect(colorOf(child.id)).toBe(PALETTES.vivid.dark.branches[0]);
   });
 
   it('stacks siblings without overlapping', () => {
@@ -74,7 +74,7 @@ describe('layout', () => {
   it('draws deeper nodes with smaller text', () => {
     const sizes = [0, 1, 2, 3, 9].map((depth) => nodeLook(depth).fontSize);
     expect(sizes).toEqual([...sizes].sort((a, b) => b - a));
-    expect(nodeLook(9)).toBe(nodeLook(3));
+    expect(nodeLook(9)).toEqual(nodeLook(3));
   });
 
   it('holds every box in one area, even when they all sit in a line', () => {
@@ -86,5 +86,30 @@ describe('layout', () => {
       10,
     );
     expect(area).toEqual({ x: -60, y: -30, width: 300, height: 60 });
+  });
+
+  it('makes text and boxes bigger with a larger text size', () => {
+    const root = treeWithBranches(1);
+    const normal = layoutTree(root).nodes[1];
+    const larger = layoutTree(root, {
+      palette: PALETTES.vivid.dark,
+      textScale: 1.4,
+    }).nodes[1];
+    expect(larger.height).toBeCloseTo(normal.height * 1.4);
+    expect(larger.width).toBeGreaterThan(normal.width);
+    expect(nodeLook(1, 1.4).fontSize).toBeCloseTo(nodeLook(1).fontSize * 1.4);
+  });
+
+  it('colours the branches from the chosen palette', () => {
+    const palette = PALETTES.colourBlindSafe.light;
+    const { nodes } = layoutTree(treeWithBranches(2), {
+      palette,
+      textScale: 1,
+    });
+    expect(nodes.map((placed) => placed.color)).toEqual([
+      palette.root,
+      palette.branches[0],
+      palette.branches[1],
+    ]);
   });
 });

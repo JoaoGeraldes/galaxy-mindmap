@@ -44,10 +44,10 @@
     gap: 4px;
     padding: 4px;
     border-radius: 999px;
-    background: rgb(20 18 48 / 0.85);
+    background: var(--floating);
     box-shadow:
-      0 0 0 1px rgb(167 139 250 / 0.35),
-      0 0 18px rgb(124 58 237 / 0.35);
+      0 0 0 1px var(--border-strong),
+      0 0 18px var(--glow);
   }
 
   button {
@@ -59,12 +59,12 @@
     border: none;
     border-radius: 999px;
     background: none;
-    color: #f8fafc;
+    color: var(--text);
     font-weight: 600;
   }
 
   button:hover:not(:disabled) {
-    background: rgb(167 139 250 / 0.2);
+    background: var(--hover);
   }
 
   /* Overrides the app-wide light hover, which flashed on the dark bar. */

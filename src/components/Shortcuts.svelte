@@ -32,7 +32,7 @@
   ] as const;
 </script>
 
-<details class="shortcuts">
+<details class="shortcuts" name="map-panel">
   <summary class="round" title="Shortcuts" aria-label="Shortcuts">
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M3 7h18v10H3zM7 11h.01M11 11h.01M15 11h.01M8 14h8" />
@@ -59,7 +59,7 @@
 <style>
   .shortcuts {
     position: relative;
-    color: #e2e8f0;
+    color: var(--text);
     font-size: 13px;
   }
 
@@ -72,7 +72,7 @@
   }
 
   [open] summary {
-    background: rgb(76 29 149 / 0.9);
+    background: var(--floating-hover);
   }
 
   /* Opens upward from the button, so it never covers it. */
@@ -85,15 +85,15 @@
     overflow-y: auto;
     padding: 4px 16px 12px;
     border-radius: 14px;
-    background: rgb(15 13 38 / 0.95);
+    background: var(--panel);
     box-shadow:
-      0 0 0 1px rgb(167 139 250 / 0.3),
-      0 8px 32px rgb(0 0 0 / 0.5);
+      0 0 0 1px var(--border-strong),
+      0 8px 32px rgb(0 0 0 / 0.25);
   }
 
   h3 {
     margin: 12px 0 6px;
-    color: #a78bfa;
+    color: var(--accent);
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.08em;
@@ -108,7 +108,7 @@
   }
 
   dt {
-    color: #cbd5e1;
+    color: var(--text-muted);
   }
 
   dd {
@@ -120,11 +120,11 @@
     display: inline-block;
     padding: 1px 6px;
     border-radius: 5px;
-    background: rgb(255 255 255 / 0.08);
-    box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.12);
+    background: var(--key);
+    box-shadow: inset 0 -1px 0 var(--border-strong);
     font-family: inherit;
     font-size: 12px;
-    color: white;
+    color: var(--text);
   }
 
   /* On phones the button sits at the top, so the panel opens downward. */
@@ -139,7 +139,7 @@
 
   .or {
     margin: 0 4px;
-    color: rgb(255 255 255 / 0.4);
+    color: var(--text-muted);
     font-size: 11px;
   }
 </style>

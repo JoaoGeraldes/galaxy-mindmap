@@ -39,10 +39,7 @@
     display: grid;
     place-items: center;
     height: 100%;
-    background-image: radial-gradient(
-      rgb(255 255 255 / 0.07) 1px,
-      transparent 1px
-    );
+    background-image: radial-gradient(var(--dots) 1px, transparent 1px);
     background-size: 24px 24px;
   }
 
@@ -53,7 +50,7 @@
     background: var(--surface);
     box-shadow:
       0 0 0 1px var(--border),
-      0 0 48px rgb(124 58 237 / 0.25);
+      0 0 48px var(--glow);
   }
 
   .logo {

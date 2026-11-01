@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import Accessibility from './Accessibility.svelte';
   import NodeMenu from './NodeMenu.svelte';
   import Shortcuts from './Shortcuts.svelte';
   import UndoBar from './UndoBar.svelte';
@@ -23,6 +24,7 @@
     type Point,
   } from '../lib/layout';
   import { advance, restingWorld, type Held } from '../lib/physics';
+  import { mapLook, type Preferences } from '../lib/preferences';
   import { between, fitView, type View } from '../lib/view';
   import {
     addChild,
@@ -38,6 +40,8 @@
     /** Called after every edit, so the map can be saved right away. */
     onchange: () => void;
     onexport: () => void;
+    /** Shared with the accessibility panel, which changes it. */
+    preferences: Preferences;
     editRootOnStart?: boolean;
   }
 
@@ -45,6 +49,7 @@
     root = $bindable(),
     onchange,
     onexport,
+    preferences = $bindable(),
     editRootOnStart = false,
   }: Props = $props();
 
@@ -55,7 +60,8 @@
   const FIT_MARGIN = 80;
   const FIT_SECONDS = 0.35;
 
-  let layout = $derived(layoutTree(root));
+  let look = $derived(mapLook(preferences));
+  let layout = $derived(layoutTree(root, look));
   let selectedId = $state<string | null>(null);
   let editingId = $state<string | null>(null);
   let hoveredId = $state<string | null>(null);
@@ -69,8 +75,8 @@
 
   // Moves smaller than this count as a click rather than a drag.
   const DRAG_THRESHOLD = 4;
-  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let world = $state.raw(restingWorld(layoutTree(root)));
+  let calm = $derived(preferences.reduceMotion);
+  let world = $state.raw(restingWorld(layoutTree(root, mapLook(preferences))));
   let held = $state<Held | null>(null);
   let grab: { id: string; from: Point } | null = null;
   let seconds = $state(0);
@@ -127,6 +133,7 @@
   $effect(() => {
     void layout;
     void held;
+    void calm;
     settled = false;
   });
 
@@ -364,6 +371,7 @@
 <svelte:window onkeydown={handleKey} />
 
 <main
+  class:calm
   bind:clientWidth={width}
   bind:clientHeight={height}
   style:background-size="{24 * view.scale}px {24 * view.scale}px"
@@ -413,7 +421,7 @@
         {/each}
       </g>
 
-      {#if !calm}
+      {#if !calm && preferences.beams}
         <!-- Outside the glow filter, which would otherwise redraw every frame. -->
         <g>
           {#each strings as { id, d, color }, index (id)}
@@ -441,7 +449,7 @@
       {/if}
 
       {#each layout.nodes as placed (placed.node.id)}
-        {@const look = nodeLook(placed.depth)}
+        {@const nodeSize = nodeLook(placed.depth, look.textScale)}
         {@const place = placeOf(placed)}
         <g
           class="node depth-{Math.min(placed.depth, 2)}"
@@ -449,7 +457,7 @@
           class:held={placed.node.id === held?.id}
           class:target={placed === target}
           style:--color={placed.color}
-          style:font-size="{look.fontSize}px"
+          style:font-size="{nodeSize.fontSize}px"
           transform="translate({place.x} {place.y})"
           role="button"
           tabindex="-1"
@@ -564,6 +572,7 @@
         ><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg
       >
     </button>
+    <Accessibility bind:preferences />
     <Shortcuts />
   </div>
 </main>
@@ -573,11 +582,8 @@
     position: relative;
     flex: 1;
     overflow: hidden;
-    background-color: #07071a;
-    background-image: radial-gradient(
-      rgb(255 255 255 / 0.07) 1px,
-      transparent 1px
-    );
+    background-color: var(--canvas);
+    background-image: radial-gradient(var(--dots) 1px, transparent 1px);
   }
 
   /* A soft light behind the centre, then darkening edges, like a lens. */
@@ -586,12 +592,8 @@
     inset: 0;
     pointer-events: none;
     background:
-      radial-gradient(
-        circle at center,
-        rgb(124 58 237 / 0.18),
-        transparent 45%
-      ),
-      radial-gradient(circle at center, transparent 55%, rgb(0 0 0 / 0.55));
+      radial-gradient(circle at center, var(--aura-centre), transparent 45%),
+      radial-gradient(circle at center, transparent 55%, var(--aura-edge));
   }
 
   svg {
@@ -627,7 +629,7 @@
   }
 
   .beam:not(.halo) {
-    stroke: white;
+    stroke: var(--beam-core);
   }
 
   .halo {
@@ -654,33 +656,33 @@
   }
 
   .node rect {
-    fill: rgb(12 12 32 / 0.85);
+    fill: var(--node-fill);
     stroke: var(--color);
     stroke-width: 1;
   }
 
   .node text {
-    fill: #cbd5e1;
+    fill: var(--node-text);
   }
 
   .depth-1 rect {
-    fill: rgb(20 18 48 / 0.9);
+    fill: var(--node-fill-main);
     stroke-width: 2;
   }
 
   .depth-1 text {
-    fill: #f8fafc;
+    fill: var(--node-text-main);
     font-weight: 600;
   }
 
   .cloud {
-    fill: color-mix(in srgb, var(--color) 30%, #0b0b24);
+    fill: color-mix(in srgb, var(--color) 30%, var(--cloud-base));
     stroke: var(--color);
     stroke-width: 2.5;
   }
 
   .depth-0 text {
-    fill: white;
+    fill: var(--root-text);
     font-weight: 700;
   }
 
@@ -706,7 +708,7 @@
 
   .node.selected rect:not(.heartbeat),
   .node.selected .cloud {
-    stroke: white;
+    stroke: var(--selected);
     stroke-width: 2.5;
   }
 
@@ -761,14 +763,12 @@
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .node.selected > :is(rect, .cloud) {
-      animation: none;
-    }
+  .calm .node.selected > :is(rect, .cloud) {
+    animation: none;
+  }
 
-    .node.selected > .heartbeat {
-      display: none;
-    }
+  .calm .node.selected > .heartbeat {
+    display: none;
   }
 
   .tools {
@@ -795,10 +795,10 @@
     width: 100%;
     height: 100%;
     padding: 0 12px;
-    border: 2px solid white;
+    border: 2px solid var(--selected);
     border-radius: 999px;
-    background: #0b0b24;
-    color: white;
+    background: var(--surface);
+    color: var(--text);
     font: inherit;
     text-align: center;
     outline: none;
