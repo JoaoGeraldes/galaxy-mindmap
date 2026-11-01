@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import NodeMenu from './NodeMenu.svelte';
+  import Shortcuts from './Shortcuts.svelte';
   import UndoBar from './UndoBar.svelte';
   import { cloudPath } from '../lib/cloud';
   import {
@@ -498,15 +499,7 @@
     onredo={() => travel(redo)}
   />
 
-  <p class="hint">
-    <span class="mouse-hint">
-      Hover a node for actions · Tab child · Del remove · Ctrl+Z undo · Scroll
-      to zoom
-    </span>
-    <span class="touch-hint">Tap a node for actions</span>
-    · Drag a node to stretch it · Drag the background to pan · Double-click background
-    to recenter
-  </p>
+  <Shortcuts />
 </main>
 
 <style>
@@ -724,31 +717,5 @@
     font: inherit;
     text-align: center;
     outline: none;
-  }
-
-  .hint {
-    position: absolute;
-    bottom: 12px;
-    left: 0;
-    right: 0;
-    margin: 0;
-    text-align: center;
-    font-size: 12px;
-    color: rgb(255 255 255 / 0.4);
-    pointer-events: none;
-  }
-
-  .touch-hint {
-    display: none;
-  }
-
-  @media (hover: none) {
-    .mouse-hint {
-      display: none;
-    }
-
-    .touch-hint {
-      display: inline;
-    }
   }
 </style>
