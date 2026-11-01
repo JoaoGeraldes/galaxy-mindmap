@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('files', {
   renameMap: call('renameMap'),
   trashMap: call('trashMap'),
   showFolder: call('showFolder'),
+  aiSetup: call('aiSetup'),
   // Returns a function that stops listening.
   onMapsChanged(listener) {
     const forward = () => listener();

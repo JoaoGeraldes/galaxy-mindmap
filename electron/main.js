@@ -103,6 +103,34 @@ const handlers = {
   async showFolder() {
     if (folder) await shell.openPath(folder);
   },
+
+  /** How AI apps should start the MCP server, for the in-app guide. */
+  async aiSetup() {
+    // Installed, the app runs the server on its own built-in Node, from
+    // outside its archive. While developing, plain Node runs the copy that
+    // npm run mcp:build makes.
+    const server = app.isPackaged
+      ? path.join(
+          process.resourcesPath,
+          'app.asar.unpacked',
+          'build',
+          'mcp',
+          'server.mjs',
+        )
+      : path.join(app.getAppPath(), 'build', 'mcp', 'server.mjs');
+    const ready = await access(server).then(
+      () => true,
+      () => false,
+    );
+    return app.isPackaged
+      ? {
+          command: process.execPath,
+          args: [server],
+          env: { ELECTRON_RUN_AS_NODE: '1' },
+          ready,
+        }
+      : { command: 'node', args: [server], ready };
+  },
 };
 
 for (const [name, handler] of Object.entries(handlers)) {
@@ -140,5 +168,15 @@ async function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
-app.on('window-all-closed', () => app.quit());
+// Two copies would share one data folder, and the second can't use its
+// storage ("Internal error."), so a second launch shows the first instead.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow?.isMinimized()) mainWindow.restore();
+    mainWindow?.focus();
+  });
+  app.whenReady().then(createWindow);
+  app.on('window-all-closed', () => app.quit());
+}

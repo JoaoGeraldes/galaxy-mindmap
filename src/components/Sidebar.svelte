@@ -17,6 +17,8 @@
     onchangefolder?: () => void;
     /** Absent where there's no file explorer to show the folder in. */
     onshowfolder?: () => void;
+    /** Absent where AI apps can't reach the maps (the web version). */
+    onconnectai?: () => void;
   }
 
   let {
@@ -31,6 +33,7 @@
     onimport,
     onchangefolder,
     onshowfolder,
+    onconnectai,
   }: Props = $props();
 
   // Phones start with the list tucked away, leaving room for the map.
@@ -168,6 +171,19 @@
         Export…
       </button>
     </footer>
+    {#if onconnectai}
+      <button class="connect" onclick={onconnectai}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"
+          ><path
+            d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"
+          /></svg
+        >
+        <span class="connect-text">
+          Connect to Claude
+          <small>MCP server · works with other AI apps too</small>
+        </span>
+      </button>
+    {/if}
     <a class="about" href={WEBSITE_URL} target="_blank" rel="noreferrer">
       About Galaxy Mind Map ↗
     </a>
@@ -424,6 +440,41 @@
     min-height: var(--tap);
     box-sizing: border-box;
     padding: 0 8px;
+  }
+
+  .connect {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: var(--tap);
+    margin: 0 16px 4px;
+    padding: 8px 12px;
+    border-style: dashed;
+    background: none;
+    color: var(--accent);
+  }
+
+  .connect svg {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linejoin: round;
+  }
+
+  .connect-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    line-height: 1.3;
+  }
+
+  .connect small {
+    color: var(--text-muted);
+    font-size: 11px;
   }
 
   .about {

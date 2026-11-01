@@ -13,7 +13,7 @@
     "site": "npm run site:build && vite site",
     "site:build": "vite build --outDir site/app --emptyOutDir && node -e \"require('fs').copyFileSync('src/assets/logo.svg', 'site/logo.svg')\"",
     "start": "vite build && electron .",
-    "package": "vite build && npx --yes electron-builder",
+    "package": "vite build && npm run mcp:build && npx --yes electron-builder",
     "mcp:build": "vite build --ssr mcp/server.ts --outDir build/mcp --emptyOutDir",
     "test": "vitest run",
     "check": "svelte-check && prettier --check . && vitest run"

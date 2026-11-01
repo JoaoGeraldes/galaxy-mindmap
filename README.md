@@ -59,35 +59,46 @@ AI apps that support the Model Context Protocol, such as Claude Desktop,
 Claude Code or Cursor, can create mind maps for you: ask for "a mind map of
 my trip plans" and a new map file appears.
 
-1. Run `npm run mcp:build`. This makes `build/mcp/server.js`.
-2. Add the server to your AI app's MCP settings, using the full path to
-   your copy of this project. For Claude Desktop, that's
-   **Settings → Developer → Edit Config**:
+The server comes inside the installed desktop app, and runs on the app's
+own built-in Node, so nothing else needs installing. Add it to your AI app's
+MCP settings; for Claude Desktop that's **Settings → Developer → Edit
+Config**. On Windows, with the app installed for you alone:
 
-   ```json
-   {
-     "mcpServers": {
-       "galaxy-mind-map": {
-         "command": "node",
-         "args": ["C:/path/to/galaxy-mindmap/build/mcp/server.js"]
-       }
-     }
-   }
-   ```
+```json
+{
+  "mcpServers": {
+    "galaxy-mind-map": {
+      "command": "C:/Users/<you>/AppData/Local/Programs/galaxy-mindmap/Galaxy Mind Map.exe",
+      "args": [
+        "C:/Users/<you>/AppData/Local/Programs/galaxy-mindmap/resources/app.asar.unpacked/build/mcp/server.mjs"
+      ],
+      "env": { "ELECTRON_RUN_AS_NODE": "1" }
+    }
+  }
+}
+```
 
-3. Restart the AI app. It now has a `create_mind_map` tool.
+Replace `<you>` with your Windows user name, and check both paths exist in
+that folder. `ELECTRON_RUN_AS_NODE` makes the app act as plain Node instead
+of opening its window. Then fully quit the AI app (from the system tray,
+not just its window) and reopen it: it now has a `create_mind_map` tool.
+
+**Working from the project instead:** run `npm run mcp:build`, then use
+`"command": "node"` with `"args": ["<project>/build/mcp/server.mjs"]` and no
+`env`. In Claude Code, that's one command:
+`claude mcp add galaxy-mind-map -- node <project>/build/mcp/server.mjs`.
 
 **Where maps are saved**, in order:
 
 1. The folder after `--folder` in `args`, if you add one, for example
-   `["…/server.js", "--folder", "D:/Maps"]`.
+   `[".../server.mjs", "--folder", "D:/Maps"]`.
 2. The folder the desktop app last had open. It notices the new map and
    shows it straight away.
 3. Your Downloads folder. In the web version, add it with **Import**.
 
 The server only ever creates new `.json` files; it never changes or
-overwrites existing ones. Rebuild it with `npm run mcp:build` after
-pulling changes.
+overwrites existing ones. `npm run package` builds it into the installer
+for you.
 
 ## Changing the logo
 

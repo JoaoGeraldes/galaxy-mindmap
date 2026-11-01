@@ -1,4 +1,5 @@
 import type { MapFolder } from './folder';
+import type { McpSetup } from './mcp-setup';
 import type { MapFile } from './projects';
 import type { Store } from './store';
 
@@ -14,6 +15,8 @@ export interface DesktopFiles {
   showFolder(): Promise<void>;
   /** Returns a function that stops listening. */
   onMapsChanged(listener: () => void): () => void;
+  /** How AI apps should start the MCP server on this computer. */
+  aiSetup(): Promise<McpSetup>;
 }
 
 const LAST_FOLDER = 'last-folder';
@@ -28,12 +31,14 @@ export function desktopFolder(
 
     async chooseFolder() {
       const path = await desktopCall(files.chooseFolder());
-      if (path) await settings.set(LAST_FOLDER, path);
+      // Remembering is a convenience: if storage fails, the folder still
+      // opens, and the app just asks for it again next time.
+      if (path) await settings.set(LAST_FOLDER, path).catch(() => {});
       return path;
     },
 
     async reopenFolder() {
-      const path = await settings.get(LAST_FOLDER);
+      const path = await settings.get(LAST_FOLDER).catch(() => undefined);
       if (!path) return null;
       if (await desktopCall(files.openFolder(path))) return path;
       throw new Error(

@@ -16,6 +16,7 @@ function fakeFiles(overrides: Partial<DesktopFiles> = {}): DesktopFiles {
     trashMap: async () => {},
     showFolder: async () => {},
     onMapsChanged: () => () => {},
+    aiSetup: async () => ({ command: 'node', args: [], ready: true }),
     ...overrides,
   };
 }
@@ -91,5 +92,27 @@ describe('desktop folder', () => {
     stop();
     expect(changes).toBe(1);
     expect(stopped).toBe(true);
+  });
+
+  it('still opens a chosen folder when it cannot be remembered', async () => {
+    const broken = {
+      ...settings(),
+      set: async () => {
+        throw new Error('Internal error.');
+      },
+    };
+    expect(await desktopFolder(fakeFiles(), broken).chooseFolder!()).toBe(
+      'C:\\Maps',
+    );
+  });
+
+  it('asks for a folder again when the remembered one cannot be read', async () => {
+    const broken = {
+      ...settings(),
+      get: async () => {
+        throw new Error('Internal error.');
+      },
+    };
+    expect(await desktopFolder(fakeFiles(), broken).reopenFolder()).toBeNull();
   });
 });

@@ -4,11 +4,16 @@ appId: com.joaogeraldes.galaxymindmap
 productName: Galaxy Mind Map
 directories:
   output: release
-# Only what the packaged app runs: the built page and the Electron code.
+# Only what the packaged app runs: the built page, the Electron code and
+# the MCP server for AI assistants.
 files:
   - dist/**
   - electron/**
+  - build/mcp/**
   - package.json
+# Kept outside the app's archive so AI apps can run the server directly.
+asarUnpack:
+  - build/mcp/**
 win:
   target: nsis
   icon: electron/icon.png

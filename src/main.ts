@@ -52,5 +52,9 @@ applyTheme(preferenceStore.load());
 
 mount(App, {
   target: document.getElementById('app')!,
-  props: { storage: platformFolder(), preferenceStore },
+  props: {
+    storage: platformFolder(),
+    preferenceStore,
+    aiSetup: window.files && (() => window.files!.aiSetup()),
+  },
 });

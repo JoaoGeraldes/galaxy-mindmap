@@ -1,9 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import MindMap from './components/MindMap.svelte';
+  import AiSetup from './components/AiSetup.svelte';
   import Sidebar from './components/Sidebar.svelte';
   import Welcome from './components/Welcome.svelte';
   import type { MapFolder } from './lib/folder';
+  import type { McpSetup } from './lib/mcp-setup';
   import type { PreferenceStore } from './lib/preferences';
   import {
     byTitle,
@@ -27,10 +29,15 @@
     retry?: () => void;
   }
 
-  let {
-    storage,
-    preferenceStore,
-  }: { storage: MapFolder; preferenceStore: PreferenceStore } = $props();
+  interface Props {
+    storage: MapFolder;
+    preferenceStore: PreferenceStore;
+    /** Only the desktop app can tell AI apps how to reach the maps. */
+    aiSetup?: () => Promise<McpSetup>;
+  }
+
+  let { storage, preferenceStore, aiSetup }: Props = $props();
+  let connectingAi = $state(false);
 
   // Read once at start; from then on this copy is the one that changes.
   // svelte-ignore state_referenced_locally
@@ -274,6 +281,7 @@
       onimport={importFile}
       onchangefolder={storage.chooseFolder && chooseFolder}
       onshowfolder={storage.showFolder}
+      onconnectai={aiSetup && (() => (connectingAi = true))}
     />
 
     <div class="canvas">
@@ -321,6 +329,10 @@
       {/if}
     </div>
   </div>
+{/if}
+
+{#if connectingAi && aiSetup && folder}
+  <AiSetup load={aiSetup} {folder} onclose={() => (connectingAi = false)} />
 {/if}
 
 <style>
