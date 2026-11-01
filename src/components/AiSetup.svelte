@@ -51,86 +51,93 @@
     </button>
   </header>
 
-  <p class="intro">
-    Let Claude make mind maps for you. It takes about two minutes, and you only
-    do it once.
-  </p>
-  <p class="intro">
-    Galaxy Mind Map includes an <b>MCP server</b>, the standard way AI apps use
-    tools. These steps set it up for Claude; other MCP apps (Cursor, Claude
-    Code…) use the same settings.
-  </p>
+  <div class="body">
+    <p class="intro">
+      Let Claude make mind maps for you. It takes about two minutes, and you
+      only do it once.
+    </p>
+    <p class="intro">
+      Galaxy Mind Map includes an <b>MCP server</b>, the standard way AI apps
+      use tools. These steps set it up for Claude; other MCP apps (Cursor,
+      Claude Code…) use the same settings.
+    </p>
 
-  <ol>
-    <li>
-      <h3>Open Claude's settings file</h3>
-      <p>
-        In the Claude desktop app, go to <b>Settings</b> → <b>Developer</b> →
-        <b>Edit Config</b>. A file called
-        <code>claude_desktop_config.json</code> opens.
-      </p>
-    </li>
-
-    <li>
-      <h3>Paste this into it, then save</h3>
-      <p>
-        If the file is empty or only has <code>{'{}'}</code>, replace everything
-        with this. If it already lists other tools under
-        <code>"mcpServers"</code>, add only the <code>"galaxy-mind-map"</code>
-        part next to them.
-      </p>
-      {#if setup && !setup.ready}
-        <p class="warning">
-          The AI helper isn't built yet. In the project folder, run
-          <code>npm run mcp:build</code>, then open this guide again.
+    <ol>
+      <li>
+        <h3>Open Claude's settings file</h3>
+        <p>
+          In the Claude desktop app, go to <b>Settings</b> → <b>Developer</b> →
+          <b>Edit Config</b>. A file called
+          <code>claude_desktop_config.json</code> opens.
         </p>
-      {/if}
-      <div class="code">
-        <pre>{config || 'Loading…'}</pre>
-        <button
-          class="primary"
-          onclick={() => copy(config, 'config')}
-          disabled={!config}
-        >
-          {copied === 'config' ? 'Copied' : 'Copy'}
-        </button>
-      </div>
-    </li>
+      </li>
 
-    <li>
-      <h3>Restart Claude</h3>
-      <p>
-        Closing its window isn't enough. Quit Claude completely ({quitKeys}),
-        then open it again.
-      </p>
-    </li>
+      <li>
+        <h3>Paste this into it, then save</h3>
+        <p>
+          If the file is empty or only has <code>{'{}'}</code>, replace
+          everything with this. If it already lists other tools under
+          <code>"mcpServers"</code>, add only the <code>"galaxy-mind-map"</code>
+          part next to them.
+        </p>
+        {#if setup && !setup.ready}
+          <p class="warning">
+            The AI helper isn't built yet. In the project folder, run
+            <code>npm run mcp:build</code>, then open this guide again.
+          </p>
+        {/if}
+        <div class="code">
+          <pre>{config || 'Loading…'}</pre>
+          <button
+            class="primary"
+            onclick={() => copy(config, 'config')}
+            disabled={!config}
+          >
+            {copied === 'config' ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+      </li>
 
-    <li>
-      <h3>Ask for a map</h3>
-      <p>In a new chat, try:</p>
-      <div class="code">
-        <p class="example">{EXAMPLE}</p>
-        <button onclick={() => copy(EXAMPLE, 'example')}>
-          {copied === 'example' ? 'Copied' : 'Copy'}
-        </button>
-      </div>
-      <p>
-        The first time, Claude asks for permission: choose <b>Allow</b>. The new
-        map appears here in a moment.
-      </p>
-    </li>
-  </ol>
+      <li>
+        <h3>Restart Claude</h3>
+        <p>
+          Closing its window isn't enough. Quit Claude completely ({quitKeys}),
+          then open it again.
+        </p>
+      </li>
 
-  <p class="where">
-    New maps are saved in <b title={folder}>{folder}</b>, the folder open here.
-  </p>
+      <li>
+        <h3>Ask for a map</h3>
+        <p>In a new chat, try:</p>
+        <div class="code">
+          <p class="example">{EXAMPLE}</p>
+          <button onclick={() => copy(EXAMPLE, 'example')}>
+            {copied === 'example' ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+        <p>
+          The first time, Claude asks for permission: choose <b>Allow</b>. The
+          new map appears here in a moment.
+        </p>
+      </li>
+    </ol>
+
+    <p class="where">
+      New maps are saved in <b title={folder}>{folder}</b>, the folder open
+      here.
+    </p>
+  </div>
 </dialog>
 
 <style>
+  /* Never taller than most of the screen; the steps scroll inside. */
   dialog {
-    width: min(600px, calc(100vw - 24px));
-    max-height: calc(100dvh - 48px);
-    padding: 24px 28px 28px;
+    box-sizing: border-box;
+    width: min(600px, calc(100vw - 32px));
+    max-height: min(720px, 80dvh);
+    margin: auto;
+    padding: 0;
+    overflow: hidden;
     border: none;
     border-radius: 18px;
     background: var(--surface);
@@ -142,6 +149,16 @@
     line-height: 1.5;
   }
 
+  dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .body {
+    overflow-y: auto;
+    padding: 0 28px 28px;
+  }
+
   dialog::backdrop {
     background: rgb(4 4 16 / 0.6);
     backdrop-filter: blur(2px);
@@ -149,8 +166,10 @@
 
   header {
     display: flex;
+    flex: none;
     align-items: center;
     justify-content: space-between;
+    padding: 16px 16px 8px 28px;
   }
 
   h2 {
@@ -288,5 +307,24 @@
 
   .where b {
     color: var(--text);
+  }
+
+  @media (max-width: 500px) {
+    dialog {
+      width: calc(100vw - 24px);
+      max-height: 85dvh;
+    }
+
+    header {
+      padding-left: 18px;
+    }
+
+    .body {
+      padding: 0 18px 20px;
+    }
+
+    li {
+      padding-left: 42px;
+    }
   }
 </style>
