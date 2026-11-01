@@ -31,6 +31,11 @@ export const GLOW = {
   blur: 4,
 };
 
+/** How many changes to a map can be undone. */
+export const HISTORY = {
+  limit: 100,
+};
+
 /** Dropping a dragged node onto another to connect it there. */
 export const DROP = {
   /** How close (px) the dragged node must come to a node to connect to it. */

@@ -1,8 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import NodeMenu from './NodeMenu.svelte';
+  import UndoBar from './UndoBar.svelte';
   import { cloudPath } from '../lib/cloud';
-  import { BEAMS, CLOUD, DROP, GLOW, PHYSICS } from '../lib/config';
+  import { BEAMS, CLOUD, DROP, GLOW, HISTORY, PHYSICS } from '../lib/config';
+  import { emptyHistory, record, redo, undo } from '../lib/history';
   import { dropTarget } from '../lib/drop';
   import {
     layoutTree,
@@ -58,6 +60,8 @@
   let grab: { id: string; from: Point } | null = null;
   let seconds = $state(0);
   let settled = false;
+  // Each version is the whole map as JSON, so a version can never change.
+  let history = $state.raw(emptyHistory<string>());
 
   let originX = $derived(width / 2 + view.x);
   let originY = $derived(height / 2 + view.y);
@@ -145,27 +149,42 @@
     editingId = id;
   }
 
+  /** Applies an edit, remembering the map before it so it can be undone. */
+  function change(edit: () => void) {
+    const before = JSON.stringify(root);
+    edit();
+    if (JSON.stringify(root) === before) return;
+    history = record(history, before, HISTORY.limit);
+    onchange();
+  }
+
+  function travel(step: typeof undo) {
+    const result = step(history, JSON.stringify(root));
+    if (!result) return;
+    history = result.history;
+    editingId = null;
+    root = JSON.parse(result.state);
+    onchange();
+  }
+
   function finishEditing(text: string) {
     const node = editingId ? findNode(root, editingId) : undefined;
     const newText = text.trim();
     editingId = null;
-    if (!node || !newText || newText === node.text) return;
-    node.text = newText;
-    onchange();
+    if (!node || !newText) return;
+    change(() => (node.text = newText));
   }
 
   function addNode(id: string) {
-    const node = addChild(root, id);
-    if (!node) return;
-    onchange();
-    startEditing(node.id);
+    let node: MindNode | undefined;
+    change(() => (node = addChild(root, id)));
+    if (node) startEditing(node.id);
   }
 
   function remove(id: string) {
     const parent = findParent(root, id);
-    if (!removeNode(root, id)) return;
-    selectedId = parent?.id ?? null;
-    onchange();
+    change(() => removeNode(root, id));
+    if (parent) selectedId = parent.id;
   }
 
   function press(id: string, event: PointerEvent) {
@@ -191,10 +210,13 @@
   }
 
   function drop() {
-    const moved = held && target && moveNode(root, held.id, target.node.id);
-    if (moved) selectedId = held!.id;
+    if (held && target) {
+      const { id } = held;
+      const newParentId = target.node.id;
+      change(() => moveNode(root, id, newParentId));
+      selectedId = id;
+    }
     release();
-    if (moved) onchange();
   }
 
   function hover(id: string, event: PointerEvent) {
@@ -221,6 +243,13 @@
   function handleKey(event: KeyboardEvent) {
     // Keys typed into inputs or on buttons belong to them, not the map.
     if ((event.target as Element).closest('input, button')) return;
+    const shortcut = event.ctrlKey || event.metaKey;
+    const key = event.key.toLowerCase();
+    if (shortcut && (key === 'z' || key === 'y')) {
+      event.preventDefault();
+      travel(key === 'y' || event.shiftKey ? redo : undo);
+      return;
+    }
     if (!selectedId || editingId) return;
     const id = selectedId;
     const actions: Record<string, () => void> = {
@@ -440,9 +469,17 @@
     />
   {/if}
 
+  <UndoBar
+    canUndo={history.past.length > 0}
+    canRedo={history.future.length > 0}
+    onundo={() => travel(undo)}
+    onredo={() => travel(redo)}
+  />
+
   <p class="hint">
     <span class="mouse-hint">
-      Hover a node for actions · Tab child · Del remove · Scroll to zoom
+      Hover a node for actions · Tab child · Del remove · Ctrl+Z undo · Scroll
+      to zoom
     </span>
     <span class="touch-hint">Tap a node for actions</span>
     · Drag a node to stretch it · Drag the background to pan · Double-click background
