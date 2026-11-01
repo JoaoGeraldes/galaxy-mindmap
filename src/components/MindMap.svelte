@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import Accessibility from './Accessibility.svelte';
   import NodeMenu from './NodeMenu.svelte';
   import Shortcuts from './Shortcuts.svelte';
@@ -319,13 +319,13 @@
   }
 
   /** Zooms and pans so the whole map fits, gliding there unless calm. */
-  function fitMap() {
+  function fitMap({ glide = true } = {}) {
     const area = areaAround(
       layout.nodes.map((placed) => ({ ...placed, ...placeOf(placed) })),
       FIT_MARGIN,
     );
     const target = fitView(area, { width, height }, MIN_SCALE, 1);
-    if (calm) {
+    if (calm || !glide) {
       view = target;
       return;
     }
@@ -338,6 +338,15 @@
       if (progress < 1) requestAnimationFrame(glide);
     });
   }
+
+  // A map opens showing all of it. Its size is only known once the
+  // browser has measured the screen area, a moment after it appears.
+  let fittedOnOpen = false;
+  $effect(() => {
+    if (fittedOnOpen || !width || !height) return;
+    fittedOnOpen = true;
+    untrack(() => fitMap({ glide: false }));
+  });
 
   function fitOnBackground(event: MouseEvent) {
     if (event.target === event.currentTarget) fitMap();
@@ -562,7 +571,7 @@
   <div class="tools">
     <button
       class="round"
-      onclick={fitMap}
+      onclick={() => fitMap()}
       title="Fit map to screen"
       aria-label="Fit map to screen"
     >
