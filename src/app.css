@@ -1,3 +1,24 @@
+/* The app's colours, shared by every component so they stay in step. */
+:root {
+  color-scheme: dark;
+  --bg: #07071a;
+  --surface: #0f0d26;
+  --surface-raised: #1a1640;
+  --border: rgb(167 139 250 / 0.18);
+  --border-strong: rgb(167 139 250 / 0.35);
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent: #a78bfa;
+  --accent-fill: #7c3aed;
+  --accent-hover: #8b5cf6;
+  --hover: rgb(167 139 250 / 0.14);
+  --danger: #f87171;
+  --danger-bg: rgb(248 113 113 / 0.12);
+  --warning: #fcd34d;
+  --warning-bg: rgb(251 191 36 / 0.12);
+  --success: #34d399;
+}
+
 html,
 body,
 #app {
@@ -7,8 +28,8 @@ body,
 
 body {
   font-family: system-ui, sans-serif;
-  color: #1f2937;
-  background: #fafaf9;
+  color: var(--text);
+  background: var(--bg);
 }
 
 button,
@@ -16,16 +37,16 @@ button,
   font: inherit;
   font-size: 14px;
   padding: 6px 12px;
-  border: 1px solid #d6d3d1;
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: white;
+  background: var(--surface-raised);
   color: inherit;
   cursor: pointer;
 }
 
 button:hover,
 .button:hover {
-  background: #f5f5f4;
+  background: var(--hover);
 }
 
 button:disabled {
@@ -33,12 +54,17 @@ button:disabled {
   cursor: default;
 }
 
+button:disabled:hover {
+  background: var(--surface-raised);
+}
+
 .primary {
-  background: #1f2937;
-  border-color: #1f2937;
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
   color: white;
+  box-shadow: 0 0 16px rgb(124 58 237 / 0.4);
 }
 
 .primary:hover {
-  background: #374151;
+  background: var(--accent-hover);
 }

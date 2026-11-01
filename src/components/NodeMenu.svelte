@@ -59,10 +59,10 @@
     gap: 2px;
     padding: 4px;
     border-radius: 10px;
-    background: white;
+    background: var(--surface-raised);
     box-shadow:
-      0 4px 16px rgb(0 0 0 / 0.12),
-      0 0 0 1px rgb(0 0 0 / 0.05);
+      0 4px 16px rgb(0 0 0 / 0.4),
+      0 0 0 1px var(--border-strong);
     /* Sits centred just above the node it belongs to. */
     transform: translate(-50%, calc(-100% - 8px));
     animation: appear 120ms ease-out;
@@ -94,8 +94,8 @@
   }
 
   .danger:hover {
-    color: #dc2626;
-    background: #fef2f2;
+    color: var(--danger);
+    background: var(--danger-bg);
   }
 
   /* Fingers need bigger targets than a mouse pointer. */

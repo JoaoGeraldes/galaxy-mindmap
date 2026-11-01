@@ -31,6 +31,10 @@
     onshowfolder,
   }: Props = $props();
 
+  // Phones start with the list tucked away, leaving room for the map.
+  const isNarrow = () => matchMedia('(max-width: 700px)').matches;
+  let collapsed = $state(isNarrow());
+
   let sorted = $derived([...projects].sort(byTitle));
   let folderName = $derived(folder.split(/[\\/]/).filter(Boolean).pop());
   let unreadableNote = $derived(
@@ -38,6 +42,11 @@
       ? "1 file in this folder isn't a readable mind map and was skipped."
       : `${unreadable.length} files in this folder aren't readable mind maps and were skipped.`,
   );
+
+  function select(id: string) {
+    onselect(id);
+    if (isNarrow()) collapsed = true;
+  }
 
   function pickFile(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
@@ -48,94 +57,176 @@
   }
 </script>
 
-<aside>
-  <header>
-    <h1>Mind Map</h1>
-    <div class="folder" title={folder}>
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M3 6h6l2 2h10v11H3z" />
-      </svg>
-      <span class="folder-name">{folderName}</span>
-      {#if onshowfolder}
-        <button
-          class="link"
-          onclick={onshowfolder}
-          title="Open in file explorer"
-        >
-          Show
-        </button>
-      {/if}
-      {#if onchangefolder}
-        <button
-          class="link"
-          onclick={onchangefolder}
-          title="Use another folder"
-        >
-          Change
-        </button>
-      {/if}
-    </div>
-    <button class="primary new" onclick={oncreate}>+ New map</button>
-  </header>
-
-  <ul>
-    {#each sorted as project (project.id)}
-      <li class:active={project.id === activeId}>
-        <button class="name" onclick={() => onselect(project.id)}>
-          <span class="title">{project.root.text}</span>
-          <span class="file">{project.file || 'Saving…'}</span>
-        </button>
-        <button
-          class="delete"
-          title="Move to trash"
-          aria-label="Move {project.root.text} to trash"
-          onclick={() => ondelete(project.id)}
-        >
-          ×
-        </button>
-      </li>
-    {/each}
-  </ul>
-
-  {#if unreadable.length}
-    <p class="unreadable" title={unreadable.join('\n')}>{unreadableNote}</p>
-  {/if}
-
-  <footer>
-    <label class="button" title="Add a mind map from a file">
-      Import…
-      <input
-        type="file"
-        accept=".json,application/json"
-        hidden
-        onchange={pickFile}
-      />
-    </label>
+<aside class:collapsed>
+  {#if collapsed}
     <button
-      onclick={onexport}
-      disabled={!activeId}
-      title="Save a copy of this map somewhere else"
+      class="icon"
+      onclick={() => (collapsed = false)}
+      title="Show maps"
+      aria-label="Show maps"
+      aria-expanded="false"
     >
-      Export…
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg
+      >
     </button>
-  </footer>
+    <button
+      class="icon primary"
+      onclick={oncreate}
+      title="New map"
+      aria-label="New map"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true"
+        ><path d="M12 5v14M5 12h14" /></svg
+      >
+    </button>
+  {:else}
+    <header>
+      <div class="title-row">
+        <h1>Mind Map</h1>
+        <button
+          class="icon"
+          onclick={() => (collapsed = true)}
+          title="Hide maps"
+          aria-label="Hide maps"
+          aria-expanded="true"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"
+            ><path d="m15 6-6 6 6 6" /></svg
+          >
+        </button>
+      </div>
+      <div class="folder" title={folder}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 6h6l2 2h10v11H3z" />
+        </svg>
+        <span class="folder-name">{folderName}</span>
+        {#if onshowfolder}
+          <button
+            class="link"
+            onclick={onshowfolder}
+            title="Open in file explorer"
+          >
+            Show
+          </button>
+        {/if}
+        {#if onchangefolder}
+          <button
+            class="link"
+            onclick={onchangefolder}
+            title="Use another folder"
+          >
+            Change
+          </button>
+        {/if}
+      </div>
+      <button class="primary new" onclick={oncreate}>+ New map</button>
+    </header>
+
+    <ul>
+      {#each sorted as project (project.id)}
+        <li class:active={project.id === activeId}>
+          <button class="name" onclick={() => select(project.id)}>
+            <span class="title">{project.root.text}</span>
+            <span class="file">{project.file || 'Saving…'}</span>
+          </button>
+          <button
+            class="delete"
+            title="Move to trash"
+            aria-label="Move {project.root.text} to trash"
+            onclick={() => ondelete(project.id)}
+          >
+            ×
+          </button>
+        </li>
+      {/each}
+    </ul>
+
+    {#if unreadable.length}
+      <p class="unreadable" title={unreadable.join('\n')}>{unreadableNote}</p>
+    {/if}
+
+    <footer>
+      <label class="button" title="Add a mind map from a file">
+        Import…
+        <input
+          type="file"
+          accept=".json,application/json"
+          hidden
+          onchange={pickFile}
+        />
+      </label>
+      <button
+        onclick={onexport}
+        disabled={!activeId}
+        title="Save a copy of this map somewhere else"
+      >
+        Export…
+      </button>
+    </footer>
+  {/if}
 </aside>
 
 <style>
   aside {
     display: flex;
+    flex: none;
     flex-direction: column;
     width: 260px;
-    border-right: 1px solid #e7e5e4;
-    background: #f5f5f4;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    box-shadow: 1px 0 24px rgb(124 58 237 / 0.12);
+    transition: width 0.2s ease;
+  }
+
+  aside.collapsed {
+    align-items: center;
+    gap: 8px;
+    width: 56px;
+    padding-top: 12px;
+  }
+
+  .icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+  }
+
+  .icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   header {
     padding: 16px;
   }
 
+  .title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .title-row .icon {
+    border: none;
+    background: none;
+    color: var(--text-muted);
+  }
+
+  .title-row .icon:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+
   h1 {
-    margin: 0 0 8px;
+    margin: 0;
     font-size: 18px;
   }
 
@@ -145,7 +236,7 @@
     gap: 6px;
     margin-bottom: 12px;
     font-size: 13px;
-    color: #57534e;
+    color: var(--text-muted);
   }
 
   .folder svg {
@@ -170,7 +261,7 @@
     padding: 2px 4px;
     border: none;
     background: none;
-    color: #1c7ed6;
+    color: var(--accent);
     font-size: 13px;
   }
 
@@ -196,9 +287,13 @@
     border-radius: 8px;
   }
 
+  li:hover {
+    background: var(--hover);
+  }
+
   li.active {
-    background: white;
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+    background: rgb(124 58 237 / 0.22);
+    box-shadow: inset 0 0 0 1px var(--border-strong);
   }
 
   li button {
@@ -223,11 +318,11 @@
 
   .file {
     font-size: 12px;
-    color: #a8a29e;
+    color: var(--text-muted);
   }
 
   .delete {
-    color: #a8a29e;
+    color: var(--text-muted);
     visibility: hidden;
   }
 
@@ -237,15 +332,15 @@
   }
 
   .delete:hover {
-    color: #dc2626;
+    color: var(--danger);
   }
 
   .unreadable {
     margin: 8px 16px 0;
     padding: 8px 10px;
     border-radius: 8px;
-    background: #fffbeb;
-    color: #92400e;
+    background: var(--warning-bg);
+    color: var(--warning);
     font-size: 12px;
     line-height: 1.4;
   }

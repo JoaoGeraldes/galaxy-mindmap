@@ -36,7 +36,10 @@
     display: grid;
     place-items: center;
     height: 100%;
-    background-image: radial-gradient(#d6d3d1 1px, transparent 1px);
+    background-image: radial-gradient(
+      rgb(255 255 255 / 0.07) 1px,
+      transparent 1px
+    );
     background-size: 24px 24px;
   }
 
@@ -44,8 +47,10 @@
     max-width: 420px;
     padding: 32px;
     border-radius: 16px;
-    background: white;
-    box-shadow: 0 8px 32px rgb(0 0 0 / 0.08);
+    background: var(--surface);
+    box-shadow:
+      0 0 0 1px var(--border),
+      0 0 48px rgb(124 58 237 / 0.25);
   }
 
   h1 {
@@ -59,15 +64,15 @@
   }
 
   .muted {
-    color: #78716c;
+    color: var(--text-muted);
     font-size: 14px;
   }
 
   .problem {
     padding: 8px 12px;
     border-radius: 8px;
-    background: #fef2f2;
-    color: #b91c1c;
+    background: var(--danger-bg);
+    color: var(--danger);
     font-size: 14px;
   }
 

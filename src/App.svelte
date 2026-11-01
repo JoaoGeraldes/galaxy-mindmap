@@ -300,7 +300,7 @@
 
   .empty p {
     margin: 0 0 16px;
-    color: #78716c;
+    color: var(--text-muted);
   }
 
   .status {
@@ -313,10 +313,10 @@
     max-width: 420px;
     padding: 6px 12px;
     border-radius: 999px;
-    background: white;
-    box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
+    background: var(--surface-raised);
+    box-shadow: 0 0 0 1px var(--border);
     font-size: 13px;
-    color: #57534e;
+    color: var(--text-muted);
   }
 
   .status::before {
@@ -328,23 +328,23 @@
   }
 
   .busy::before {
-    background: #a8a29e;
+    background: var(--text-muted);
     animation: pulse 1s ease-in-out infinite;
   }
 
   .done::before {
-    background: #2f9e44;
+    background: var(--success);
   }
 
   .error {
     flex-wrap: wrap;
     border-radius: 12px;
-    background: #fef2f2;
-    color: #b91c1c;
+    background: var(--danger-bg);
+    color: var(--danger);
   }
 
   .error::before {
-    background: #dc2626;
+    background: var(--danger);
   }
 
   .detail {
