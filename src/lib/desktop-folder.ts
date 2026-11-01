@@ -1,5 +1,6 @@
-import type { MapFolder, StoredValue } from './folder';
+import type { MapFolder } from './folder';
 import type { MapFile } from './projects';
+import type { Store } from './store';
 
 /** What electron/preload.cjs exposes as `window.files`. */
 export interface DesktopFiles {
@@ -13,22 +14,24 @@ export interface DesktopFiles {
   showFolder(): Promise<void>;
 }
 
+const LAST_FOLDER = 'last-folder';
+
 /** Maps kept in a folder on disk, through the Electron main process. */
 export function desktopFolder(
   files: DesktopFiles,
-  lastPath: StoredValue<string>,
+  settings: Store<string>,
 ): MapFolder {
   return {
     removesToTrash: true,
 
     async chooseFolder() {
       const path = await desktopCall(files.chooseFolder());
-      if (path) await lastPath.save(path);
+      if (path) await settings.set(LAST_FOLDER, path);
       return path;
     },
 
     async reopenFolder() {
-      const path = await lastPath.load();
+      const path = await settings.get(LAST_FOLDER);
       if (!path) return null;
       if (await desktopCall(files.openFolder(path))) return path;
       throw new Error(

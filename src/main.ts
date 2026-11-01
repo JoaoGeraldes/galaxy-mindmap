@@ -1,26 +1,19 @@
 import { mount } from 'svelte';
 import App from './App.svelte';
 import './app.css';
+import { browserFolder } from './lib/browser-folder';
 import { desktopFolder } from './lib/desktop-folder';
 import type { MapFolder } from './lib/folder';
-import { indexedDbValue } from './lib/stored-value';
-import { webFolder, type Directory } from './lib/web-folder';
+import { indexedDbStore } from './lib/store';
 
 // The one place that knows which platform the app runs on.
 function platformFolder(): MapFolder {
   if (window.files) {
-    return desktopFolder(window.files, indexedDbValue('desktop-folder'));
+    return desktopFolder(window.files, indexedDbStore('mind-map-settings'));
   }
-  return webFolder(pickDirectory, indexedDbValue('web-folder'));
-}
-
-async function pickDirectory(): Promise<Directory> {
-  if (!window.showDirectoryPicker) {
-    throw new Error(
-      "This browser can't open folders. Try Chrome or Edge, or the desktop app.",
-    );
-  }
-  return window.showDirectoryPicker({ mode: 'readwrite' });
+  // Without this the browser may clear the maps when it runs low on space.
+  navigator.storage?.persist?.();
+  return browserFolder(indexedDbStore('mind-map-maps'));
 }
 
 mount(App, {

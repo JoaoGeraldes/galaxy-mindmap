@@ -5,9 +5,12 @@ import type { MapFile } from './projects';
  * (desktop, web) plugs in its own implementation without the app knowing.
  */
 export interface MapFolder {
-  /** Asks the user for a folder; resolves to its name, or null if cancelled. */
-  chooseFolder(): Promise<string | null>;
-  /** Reopens the last folder used, or resolves to null if there is none. */
+  /**
+   * Asks the user for a folder; resolves to its name, or null if cancelled.
+   * Absent where maps live in one fixed place.
+   */
+  chooseFolder?(): Promise<string | null>;
+  /** Reopens the last place used, or resolves to null if there is none. */
   reopenFolder(): Promise<string | null>;
   readMaps(): Promise<MapFile[]>;
   writeMap(file: string, text: string): Promise<void>;
@@ -17,10 +20,4 @@ export interface MapFolder {
   removesToTrash: boolean;
   /** Opens the folder in the system's file explorer, where there is one. */
   showFolder?(): Promise<void>;
-}
-
-/** A single value kept between visits. */
-export interface StoredValue<T> {
-  load(): Promise<T | undefined>;
-  save(value: T): Promise<void>;
 }

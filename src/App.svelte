@@ -67,7 +67,7 @@
   async function chooseFolder() {
     await fileQueue;
     try {
-      const chosen = await storage.chooseFolder();
+      const chosen = await storage.chooseFolder?.();
       if (chosen) await openMaps(chosen);
     } catch (error) {
       folderProblem = errorMessage(error);
@@ -211,7 +211,10 @@
 </svelte:head>
 
 {#if folder === null}
-  <Welcome problem={folderProblem} onchoose={chooseFolder} />
+  <Welcome
+    problem={folderProblem}
+    onchoose={storage.chooseFolder && chooseFolder}
+  />
 {:else if folder}
   <div class="app">
     <Sidebar
@@ -224,7 +227,7 @@
       ondelete={deleteMap}
       onexport={exportActive}
       onimport={importFile}
-      onchangefolder={chooseFolder}
+      onchangefolder={storage.chooseFolder && chooseFolder}
       onshowfolder={storage.showFolder}
     />
 
@@ -239,8 +242,8 @@
         {/key}
       {:else}
         <div class="empty">
-          <h2>No mind maps in this folder yet</h2>
-          <p>Each map you create is saved here as its own .json file.</p>
+          <h2>No mind maps here yet</h2>
+          <p>Each map you create is saved as its own .json file.</p>
           <button class="primary" onclick={newMap}>
             Create your first map
           </button>

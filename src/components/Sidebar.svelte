@@ -11,7 +11,8 @@
     ondelete: (id: string) => void;
     onexport: () => void;
     onimport: (file: File) => void;
-    onchangefolder: () => void;
+    /** Absent where maps live in one fixed place. */
+    onchangefolder?: () => void;
     /** Absent where there's no file explorer to show the folder in. */
     onshowfolder?: () => void;
   }
@@ -64,9 +65,15 @@
           Show
         </button>
       {/if}
-      <button class="link" onclick={onchangefolder} title="Use another folder">
-        Change
-      </button>
+      {#if onchangefolder}
+        <button
+          class="link"
+          onclick={onchangefolder}
+          title="Use another folder"
+        >
+          Change
+        </button>
+      {/if}
     </div>
     <button class="primary new" onclick={oncreate}>+ New map</button>
   </header>
@@ -95,7 +102,7 @@
   {/if}
 
   <footer>
-    <label class="button" title="Copy a mind map file into this folder">
+    <label class="button" title="Add a mind map from a file">
       Import…
       <input
         type="file"

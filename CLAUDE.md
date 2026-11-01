@@ -18,7 +18,7 @@
   passed in as arguments. Don't extend classes.
 - Avoid coupling: depend on interfaces, never on a platform. The app only talks to
   `MapFolder` (`src/lib/folder.ts`); each platform has its own adapter
-  (`desktop-folder.ts`, `web-folder.ts`) and only `src/main.ts` chooses one.
+  (`desktop-folder.ts`, `browser-folder.ts`) and only `src/main.ts` chooses one.
   Components never touch `window.files` or browser file APIs directly.
 - Pass dependencies in (storage, pickers, clocks) so tests can use plain fakes.
 - A new platform is a new adapter, not `if (desktop)` branches in shared code.

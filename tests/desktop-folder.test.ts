@@ -1,17 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { desktopFolder, type DesktopFiles } from '../src/lib/desktop-folder';
-import type { StoredValue } from '../src/lib/folder';
+import { memoryStore } from '../src/lib/store';
 
-function memory<T>(value?: T): StoredValue<T> & { value?: T } {
-  return {
-    value,
-    async load() {
-      return this.value;
-    },
-    async save(next) {
-      this.value = next;
-    },
-  };
+function settings(lastFolder?: string) {
+  return memoryStore(lastFolder ? { 'last-folder': lastFolder } : {});
 }
 
 function fakeFiles(overrides: Partial<DesktopFiles> = {}): DesktopFiles {
@@ -29,33 +21,33 @@ function fakeFiles(overrides: Partial<DesktopFiles> = {}): DesktopFiles {
 
 describe('desktop folder', () => {
   it('remembers the chosen folder for next time', async () => {
-    const lastPath = memory<string>();
-    await desktopFolder(fakeFiles(), lastPath).chooseFolder();
-    expect(lastPath.value).toBe('C:\\Maps');
+    const store = settings();
+    await desktopFolder(fakeFiles(), store).chooseFolder!();
+    expect(await store.get('last-folder')).toBe('C:\\Maps');
   });
 
   it('forgets nothing when choosing is cancelled', async () => {
-    const lastPath = memory('C:\\Old');
+    const store = settings('C:\\Old');
     const files = fakeFiles({ chooseFolder: async () => null });
-    expect(await desktopFolder(files, lastPath).chooseFolder()).toBeNull();
-    expect(lastPath.value).toBe('C:\\Old');
+    expect(await desktopFolder(files, store).chooseFolder!()).toBeNull();
+    expect(await store.get('last-folder')).toBe('C:\\Old');
   });
 
   it('reopens the remembered folder', async () => {
-    const folder = desktopFolder(fakeFiles(), memory('C:\\Maps'));
+    const folder = desktopFolder(fakeFiles(), settings('C:\\Maps'));
     expect(await folder.reopenFolder()).toBe('C:\\Maps');
   });
 
   it('has nothing to reopen on first launch', async () => {
     expect(
-      await desktopFolder(fakeFiles(), memory()).reopenFolder(),
+      await desktopFolder(fakeFiles(), settings()).reopenFolder(),
     ).toBeNull();
   });
 
   it('explains when the remembered folder has gone', async () => {
     const files = fakeFiles({ openFolder: async () => false });
     await expect(
-      desktopFolder(files, memory('D:\\Maps')).reopenFolder(),
+      desktopFolder(files, settings('D:\\Maps')).reopenFolder(),
     ).rejects.toThrow('“D:\\Maps” could not be found.');
   });
 
@@ -64,7 +56,7 @@ describe('desktop folder', () => {
     const files = fakeFiles({
       trashMap: async (file) => void trashed.push(file),
     });
-    const folder = desktopFolder(files, memory());
+    const folder = desktopFolder(files, settings());
     await folder.removeMap('Ideas.json');
     expect(folder.removesToTrash).toBe(true);
     expect(trashed).toEqual(['Ideas.json']);
@@ -79,7 +71,7 @@ describe('desktop folder', () => {
       },
     });
     await expect(
-      desktopFolder(files, memory()).writeMap('a.json', '{}'),
+      desktopFolder(files, settings()).writeMap('a.json', '{}'),
     ).rejects.toThrow(/^Disk is full$/);
   });
 });

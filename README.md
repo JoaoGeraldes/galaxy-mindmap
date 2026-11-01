@@ -1,7 +1,8 @@
 # Mind Map
 
-Mind maps saved as JSON files in a folder you choose. Runs as a desktop app
-(Electron) or in the browser (Chrome or Edge, which can open local folders).
+Mind maps saved as JSON files. The desktop app (Electron) saves them in a
+folder you choose; the web version keeps them in the browser, and import and
+export move them to and from disk.
 
 ```sh
 npm install

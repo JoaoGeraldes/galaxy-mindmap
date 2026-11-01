@@ -1,23 +1,33 @@
 <script lang="ts">
-  let { problem, onchoose }: { problem: string; onchoose: () => void } =
-    $props();
+  let {
+    problem,
+    onchoose,
+  }: {
+    problem: string;
+    /** Absent where maps live in one fixed place, so there's nothing to choose. */
+    onchoose?: () => void;
+  } = $props();
 </script>
 
 <div class="welcome">
   <div class="card">
     <h1>Mind Map</h1>
-    <p>
-      Choose a folder to keep your mind maps in. Each map is saved there as its
-      own <code>.json</code> file, and every change is saved automatically.
-    </p>
-    <p class="muted">
-      Pick a folder that already has maps to open them, or an empty one to start
-      fresh.
-    </p>
+    {#if onchoose}
+      <p>
+        Choose a folder to keep your mind maps in. Each map is saved there as
+        its own <code>.json</code> file, and every change is saved automatically.
+      </p>
+      <p class="muted">
+        Pick a folder that already has maps to open them, or an empty one to
+        start fresh.
+      </p>
+    {/if}
     {#if problem}
       <p class="problem" role="alert">{problem}</p>
     {/if}
-    <button class="primary" onclick={onchoose}>Choose folder…</button>
+    {#if onchoose}
+      <button class="primary" onclick={onchoose}>Choose folder…</button>
+    {/if}
   </div>
 </div>
 
