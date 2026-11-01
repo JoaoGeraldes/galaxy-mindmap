@@ -547,6 +547,18 @@
     onredo={() => travel(redo)}
   />
 
+  <!-- Alone in the opposite corner, so it isn't tapped by accident. -->
+  <button
+    class="round export"
+    onclick={onexport}
+    title="Export this map"
+    aria-label="Export this map"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true"
+      ><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg
+    >
+  </button>
+
   <div class="tools">
     <button
       class="round"
@@ -560,16 +572,6 @@
           cy="12"
           r="2"
         /></svg
-      >
-    </button>
-    <button
-      class="round"
-      onclick={onexport}
-      title="Export this map"
-      aria-label="Export this map"
-    >
-      <svg viewBox="0 0 24 24" aria-hidden="true"
-        ><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg
       >
     </button>
     <Accessibility bind:preferences />
@@ -780,12 +782,25 @@
     gap: 8px;
   }
 
+  .export {
+    position: absolute;
+    left: 16px;
+    bottom: calc(40px + env(safe-area-inset-bottom));
+  }
+
   /* On phones the bottom belongs to undo and redo, within thumb reach. */
   @media (max-width: 700px) {
     .tools {
       top: 12px;
       left: 12px;
       right: auto;
+      bottom: auto;
+    }
+
+    .export {
+      top: 12px;
+      right: 12px;
+      left: auto;
       bottom: auto;
     }
   }

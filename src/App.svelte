@@ -334,6 +334,17 @@
     color: var(--text-muted);
   }
 
+  /* On phones the map's export button takes this corner. */
+  @media (max-width: 700px) {
+    .status {
+      top: 72px;
+      left: 12px;
+      right: 12px;
+      max-width: none;
+      justify-content: center;
+    }
+  }
+
   .status::before {
     content: '';
     flex: none;
