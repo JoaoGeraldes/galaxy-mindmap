@@ -3,3 +3,5 @@ dist
 # Built or copied into the site when it is previewed or published.
 site/logo.svg
 site/app
+# Installers made by npm run package.
+release

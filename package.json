@@ -2,6 +2,8 @@
   "name": "galaxy-mindmap",
   "private": true,
   "version": "0.1.0",
+  "description": "A mind map app where your ideas are bubbles connected by stretchy strings.",
+  "author": "João Geraldes",
   "type": "module",
   "main": "electron/main.js",
   "scripts": {
@@ -11,6 +13,7 @@
     "site": "npm run site:build && vite site",
     "site:build": "vite build --outDir site/app --emptyOutDir && node -e \"require('fs').copyFileSync('src/assets/logo.svg', 'site/logo.svg')\"",
     "start": "vite build && electron .",
+    "package": "vite build && npx --yes electron-builder",
     "test": "vitest run",
     "check": "svelte-check && prettier --check . && vitest run"
   },

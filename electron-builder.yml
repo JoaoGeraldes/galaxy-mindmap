@@ -1,0 +1,22 @@
+# How `npm run package` turns the app into installers; see the README's
+# "Desktop app" section. Options: https://www.electron.build/configuration
+appId: com.joaogeraldes.galaxymindmap
+productName: Galaxy Mind Map
+directories:
+  output: release
+# Only what the packaged app runs: the built page and the Electron code.
+files:
+  - dist/**
+  - electron/**
+  - package.json
+win:
+  target: nsis
+  icon: electron/icon.png
+mac:
+  target: dmg
+  icon: electron/icon.png
+  category: public.app-category.productivity
+linux:
+  target: AppImage
+  icon: electron/icon.png
+  category: Office
