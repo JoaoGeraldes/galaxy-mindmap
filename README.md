@@ -13,6 +13,7 @@ npm run package   # make an installer for this computer (see below)
 npm run build     # build the web version into dist/
 npm run check     # types, formatting and tests
 npm run site      # preview the website in site/
+npm run mcp:build # build the server for AI assistants (see below)
 ```
 
 ## Desktop app
@@ -51,6 +52,42 @@ Developer account for macOS); see
 
 **Icon:** taken from `electron/icon.png`, which electron-builder converts to
 each system's format.
+
+## AI assistants (MCP)
+
+AI apps that support the Model Context Protocol, such as Claude Desktop,
+Claude Code or Cursor, can create mind maps for you: ask for "a mind map of
+my trip plans" and a new map file appears.
+
+1. Run `npm run mcp:build`. This makes `build/mcp/server.js`.
+2. Add the server to your AI app's MCP settings, using the full path to
+   your copy of this project. For Claude Desktop, that's
+   **Settings → Developer → Edit Config**:
+
+   ```json
+   {
+     "mcpServers": {
+       "galaxy-mind-map": {
+         "command": "node",
+         "args": ["C:/path/to/galaxy-mindmap/build/mcp/server.js"]
+       }
+     }
+   }
+   ```
+
+3. Restart the AI app. It now has a `create_mind_map` tool.
+
+**Where maps are saved**, in order:
+
+1. The folder after `--folder` in `args`, if you add one, for example
+   `["…/server.js", "--folder", "D:/Maps"]`.
+2. The folder the desktop app last had open. It notices the new map and
+   shows it straight away.
+3. Your Downloads folder. In the web version, add it with **Import**.
+
+The server only ever creates new `.json` files; it never changes or
+overwrites existing ones. Rebuild it with `npm run mcp:build` after
+pulling changes.
 
 ## Changing the logo
 

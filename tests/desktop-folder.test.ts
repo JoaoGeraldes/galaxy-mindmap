@@ -15,6 +15,7 @@ function fakeFiles(overrides: Partial<DesktopFiles> = {}): DesktopFiles {
     renameMap: async () => {},
     trashMap: async () => {},
     showFolder: async () => {},
+    onMapsChanged: () => () => {},
     ...overrides,
   };
 }
@@ -73,5 +74,22 @@ describe('desktop folder', () => {
     await expect(
       desktopFolder(files, settings()).writeMap('a.json', '{}'),
     ).rejects.toThrow(/^Disk is full$/);
+  });
+
+  it('passes on maps changed outside the app, until told to stop', () => {
+    let notify = () => {};
+    let stopped = false;
+    const files = fakeFiles({
+      onMapsChanged: (listener) => {
+        notify = listener;
+        return () => (stopped = true);
+      },
+    });
+    let changes = 0;
+    const stop = desktopFolder(files, settings()).onChange!(() => changes++);
+    notify();
+    stop();
+    expect(changes).toBe(1);
+    expect(stopped).toBe(true);
   });
 });

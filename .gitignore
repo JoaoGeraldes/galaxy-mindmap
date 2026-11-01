@@ -5,3 +5,5 @@ site/logo.svg
 site/app
 # Installers made by npm run package.
 release
+# The MCP server, built by npm run mcp:build.
+build

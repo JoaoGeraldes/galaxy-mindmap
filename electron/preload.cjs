@@ -14,4 +14,10 @@ contextBridge.exposeInMainWorld('files', {
   renameMap: call('renameMap'),
   trashMap: call('trashMap'),
   showFolder: call('showFolder'),
+  // Returns a function that stops listening.
+  onMapsChanged(listener) {
+    const forward = () => listener();
+    ipcRenderer.on('mapsChanged', forward);
+    return () => ipcRenderer.removeListener('mapsChanged', forward);
+  },
 });

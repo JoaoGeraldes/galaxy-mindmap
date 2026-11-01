@@ -20,4 +20,9 @@ export interface MapFolder {
   removesToTrash: boolean;
   /** Opens the folder in the system's file explorer, where there is one. */
   showFolder?(): Promise<void>;
+  /**
+   * Calls `listener` when maps change outside the app, where that can be
+   * noticed. Returns a function that stops listening.
+   */
+  onChange?(listener: () => void): () => void;
 }

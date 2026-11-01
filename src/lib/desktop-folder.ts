@@ -12,6 +12,8 @@ export interface DesktopFiles {
   renameMap(from: string, to: string): Promise<void>;
   trashMap(file: string): Promise<void>;
   showFolder(): Promise<void>;
+  /** Returns a function that stops listening. */
+  onMapsChanged(listener: () => void): () => void;
 }
 
 const LAST_FOLDER = 'last-folder';
@@ -44,6 +46,7 @@ export function desktopFolder(
     renameMap: (from, to) => desktopCall(files.renameMap(from, to)),
     removeMap: (file) => desktopCall(files.trashMap(file)),
     showFolder: () => desktopCall(files.showFolder()),
+    onChange: (listener) => files.onMapsChanged(listener),
   };
 }
 

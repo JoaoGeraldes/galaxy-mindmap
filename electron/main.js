@@ -7,11 +7,14 @@ import {
   stat,
   writeFile,
 } from 'node:fs/promises';
+import { watch } from 'node:fs';
 import path from 'node:path';
+import { rememberFolder } from './last-folder.js';
 
 const isDev = process.argv.includes('--dev');
 let mainWindow = null;
 let folder = null;
+let watcher = null;
 
 function currentFolder() {
   if (!folder) throw new Error('No folder is open.');
@@ -27,6 +30,24 @@ function mapPath(file) {
   return path.join(currentFolder(), file);
 }
 
+/**
+ * Opens a folder: watches it, so maps other tools add (such as the MCP
+ * server) show up in the app, and records it, so those tools can find it.
+ */
+function useFolder(chosen) {
+  folder = chosen;
+  watcher?.close();
+  let settle;
+  watcher = watch(folder, (_event, file) => {
+    if (!file?.endsWith('.json')) return;
+    // A save or rename fires several events; they settle into one message.
+    clearTimeout(settle);
+    settle = setTimeout(() => mainWindow?.webContents.send('mapsChanged'), 300);
+  });
+  // Only a convenience for other tools, so a failure here is ignored.
+  rememberFolder(folder).catch(() => {});
+}
+
 const handlers = {
   async chooseFolder() {
     const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
@@ -35,14 +56,14 @@ const handlers = {
       properties: ['openDirectory', 'createDirectory'],
     });
     if (canceled) return null;
-    folder = filePaths[0];
+    useFolder(filePaths[0]);
     return folder;
   },
 
   async openFolder(candidate) {
     try {
       await access(candidate);
-      folder = candidate;
+      useFolder(candidate);
       return true;
     } catch {
       return false;

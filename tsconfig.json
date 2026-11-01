@@ -3,7 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "noEmit": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true
   },
-  "include": ["src", "tests", "vite.config.ts"]
+  "include": ["src", "tests", "mcp", "vite.config.ts"]
 }

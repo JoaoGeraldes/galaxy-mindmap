@@ -100,6 +100,37 @@
     }
   }
 
+  /**
+   * Adds maps that appeared in the folder from elsewhere, such as an AI
+   * using the MCP server. Runs in the file queue, so the app's own saves,
+   * which also change the folder, have finished and are already known.
+   */
+  function addNewMaps() {
+    enqueue(async () => {
+      try {
+        const known = new Set([...projects.map((p) => p.file), ...unreadable]);
+        const files = await storage.readMaps();
+        const added = loadProjects(files.filter((f) => !known.has(f.file)));
+        projects.push(...added.projects);
+        unreadable.push(...added.unreadable);
+        const titles = added.projects.map((p) => `“${p.root.text}”`);
+        if (titles.length) {
+          status = {
+            kind: 'done',
+            text: `Added ${titles.join(', ')}`,
+            at: new Date(),
+          };
+        }
+      } catch {
+        // The next change, or reopening the folder, will try again.
+      }
+    });
+  }
+
+  $effect(() => {
+    if (folder) return storage.onChange?.(addNewMaps);
+  });
+
   async function writeProject(project: Project) {
     // The map may have been deleted while this save was waiting its turn.
     if (!projects.some((p) => p.id === project.id)) return;
